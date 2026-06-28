@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PhoneCall, GraduationCap, MapPin, CheckCircle, Lightbulb, Users, MonitorSmartphone, Target, Sparkles, BookOpen, Star, ArrowLeft } from "lucide-react";
-import schoolLogo from "@assets/شعار_المدرسه_1782632558477.webp";
+import schoolLogo from "@assets/Dشعار_المدرسة_3_1782634252188.png";
 
 export default function Home() {
   return (
