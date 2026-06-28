@@ -56,7 +56,7 @@ export default function Home() {
                 <a href="#about">اكتشف مدرستنا <ArrowLeft className="w-5 h-5 mr-2" /></a>
               </Button>
               <Button size="lg" variant="outline" className="rounded-full text-lg h-14 px-8 border-2 hover:bg-gray-50 text-foreground" asChild>
-                <a href="#contact">سجل ابنك الآن</a>
+                <a href="/register">سجل ابنك الآن</a>
               </Button>
             </div>
           </motion.div>
