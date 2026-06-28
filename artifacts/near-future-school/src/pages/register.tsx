@@ -16,15 +16,20 @@ const BRANCHES = [
 ];
 
 const GRADES = [
-  "الصف الأول الابتدائي",
-  "الصف الثاني الابتدائي",
-  "الصف الثالث الابتدائي",
-  "الصف الرابع الابتدائي",
-  "الصف الخامس الابتدائي",
-  "الصف السادس الابتدائي",
-  "الصف السابع",
-  "الصف الثامن",
-  "الصف التاسع",
+  "روضة",
+  "تمهيدي",
+  "الأول الابتدائي",
+  "الثاني الابتدائي",
+  "الثالث الابتدائي",
+  "الرابع الابتدائي",
+  "الخامس الابتدائي",
+  "السادس الابتدائي",
+  "السابع",
+  "الثامن",
+  "التاسع",
+  "أول ثانوي",
+  "ثاني ثانوي",
+  "ثالث ثانوي",
 ];
 
 const GENDERS = ["ذكر", "أنثى"];
@@ -67,7 +72,7 @@ export default function Register() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    for (const [k, v] of Object.entries(form)) {
+    for (const [, v] of Object.entries(form)) {
       if (!v.trim()) {
         toast({ title: "خطأ", description: "يرجى تعبئة جميع الحقول المطلوبة.", variant: "destructive" });
         return;
@@ -82,6 +87,31 @@ export default function Register() {
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error("فشل الإرسال");
+
+      const msg = [
+        "📋 *طلب تسجيل طالب جديد*",
+        "━━━━━━━━━━━━━━━━━━━━",
+        `🏫 *الفرع:* ${form.branch}`,
+        "",
+        "👤 *بيانات الطالب*",
+        `• الاسم: ${form.studentName}`,
+        `• الصف: ${form.grade}`,
+        `• الجنس: ${form.gender}`,
+        `• الرقم الوطني: ${form.nationalId}`,
+        `• تاريخ الميلاد: ${form.birthDate}`,
+        "",
+        "👨‍👩‍👦 *بيانات ولي الأمر والأم*",
+        `• اسم ولي الأمر: ${form.guardianName}`,
+        `• هاتف ولي الأمر: ${form.guardianPhone}`,
+        `• اسم الأم: ${form.motherName}`,
+        `• هاتف الأم: ${form.motherPhone}`,
+        "━━━━━━━━━━━━━━━━━━━━",
+        "مدرسة ضياء المستقبل ✨",
+      ].join("\n");
+
+      const waUrl = `https://wa.me/218915463080?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, "_blank");
+
       setSuccess(true);
     } catch {
       toast({ title: "خطأ", description: "حدث خطأ أثناء الإرسال. يرجى المحاولة مجدداً.", variant: "destructive" });

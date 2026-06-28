@@ -250,9 +250,33 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { name: "فرع المنطقة الجنوبية", desc: "تامزاوة الشاطئ", phone: "0915755363", color: "from-[#F07730] to-[#8B3A2A]" },
-              { name: "فرع طرابلس - طريق المطار", desc: "شارع المطبات", phone: "0913081358", color: "from-[#3AABDF] to-[#A45DA6]" },
-              { name: "فرع طرابلس - السدرة", desc: "شارع الحياة", phone: "0915463080", color: "from-[#7EBE3F] to-[#3AABDF]" }
+              {
+                region: "المنطقة الجنوبية",
+                name: "فرع تامزاوة الشاطئ",
+                phone: "0915755363",
+                facebook: "https://www.facebook.com/profile.php?id=61567008954540&locale=ar_AR",
+                map: "https://maps.app.goo.gl/99GDq4LZg8gmowc37",
+                color: "from-[#F07730] to-[#8B3A2A]",
+                accent: "#F07730",
+              },
+              {
+                region: "المنطقة الغربية",
+                name: "فرع طرابلس – طريق المطار",
+                phone: "0913081358",
+                facebook: "https://www.facebook.com/1nearfuture?locale=ar_AR",
+                map: "https://maps.app.goo.gl/qcv7uxe1dK54WaSKA",
+                color: "from-[#3AABDF] to-[#A45DA6]",
+                accent: "#3AABDF",
+              },
+              {
+                region: "المنطقة الغربية",
+                name: "فرع طرابلس – السدرة",
+                phone: "0915463080",
+                facebook: "https://www.facebook.com/profile.php?id=61580399701160&locale=ar_AR",
+                map: "https://maps.app.goo.gl/Zp4moTSkDDokfhD86",
+                color: "from-[#7EBE3F] to-[#3AABDF]",
+                accent: "#7EBE3F",
+              },
             ].map((branch, i) => (
               <motion.div
                 key={i}
@@ -261,25 +285,49 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
               >
-                <Card className="overflow-hidden border-none shadow-lg group hover:shadow-xl transition-all">
+                <Card className="overflow-hidden border-none shadow-lg group hover:shadow-xl transition-all h-full">
                   <div className={`h-2 bg-gradient-to-r ${branch.color}`} />
-                  <CardContent className="p-8">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-600">
-                        <MapPin className="w-6 h-6" />
+                  <CardContent className="p-8 flex flex-col gap-5 h-full">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: branch.accent + "18" }}>
+                        <MapPin className="w-6 h-6" style={{ color: branch.accent }} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-xl text-[#1A1A1A]">{branch.name}</h4>
-                        <p className="text-gray-500">{branch.desc}</p>
+                        <p className="text-sm font-medium text-gray-400 mb-0.5">{branch.region}</p>
+                        <h4 className="font-bold text-xl text-[#1A1A1A] leading-snug">{branch.name}</h4>
                       </div>
                     </div>
+
                     <a href={`tel:${branch.phone}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group/phone">
                       <div className="flex items-center gap-3">
-                        <PhoneCall className="w-5 h-5 text-primary" />
-                        <span className="font-bold text-lg dir-ltr" dir="ltr">{branch.phone}</span>
+                        <PhoneCall className="w-5 h-5" style={{ color: branch.accent }} />
+                        <span className="font-bold text-lg" dir="ltr">{branch.phone}</span>
                       </div>
-                      <span className="text-sm font-bold text-primary opacity-0 group-hover/phone:opacity-100 transition-opacity">اتصل الآن</span>
+                      <span className="text-sm font-bold opacity-0 group-hover/phone:opacity-100 transition-opacity" style={{ color: branch.accent }}>اتصل الآن</span>
                     </a>
+
+                    <div className="flex gap-3 mt-auto">
+                      <a
+                        href={branch.facebook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-[#1877F2]/20 bg-[#1877F2]/5 hover:bg-[#1877F2]/10 transition-colors text-[#1877F2] font-semibold text-sm"
+                      >
+                        <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        فيسبوك
+                      </a>
+                      <a
+                        href={branch.map}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-[#EA4335]/20 bg-[#EA4335]/5 hover:bg-[#EA4335]/10 transition-colors text-[#EA4335] font-semibold text-sm"
+                      >
+                        <MapPin className="w-4 h-4 shrink-0" />
+                        الموقع
+                      </a>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
