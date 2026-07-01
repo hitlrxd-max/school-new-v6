@@ -219,8 +219,8 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 text-center">
             {[
-              { value: 600, suffix: '+', label: 'طالب وطالبة', icon: GraduationCap, from: '#1FA0FF', to: '#0D80E0' },
-              { value: 100, suffix: '+', label: 'عضو هيئة تدريس', icon: Users, from: '#12DAFB', to: '#0AABCC' },
+              { value: 1678, suffix: '+', label: 'طالب وطالبة', icon: GraduationCap, from: '#1FA0FF', to: '#0D80E0' },
+              { value: 158, suffix: '+', label: 'عضو هيئة تدريس', icon: Users, from: '#12DAFB', to: '#0AABCC' },
               { value: 4, suffix: '+', label: 'فروع', icon: MapPin, from: '#A7FDCC', to: '#6FE8A0' },
               { value: 1900, suffix: '+', label: 'خريج متميز', icon: Star, from: '#1FA0FF', to: '#12DAFB' },
             ].map((stat, i) => (
