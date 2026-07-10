@@ -140,7 +140,7 @@ export function mockupPreviewPlugin(): Plugin {
         },
       });
 
-      watcher.on("add", (file) => {
+      watcher.on("add", (file: string) => {
         if (
           isMockupFile(file) &&
           isPreviewTarget(path.relative(mockupsAbsDir, file))
@@ -149,13 +149,13 @@ export function mockupPreviewPlugin(): Plugin {
         }
       });
 
-      watcher.on("unlink", (file) => {
+      watcher.on("unlink", (file: string) => {
         if (isMockupFile(file)) {
           void onFileAddedOrRemoved();
         }
       });
 
-      viteServer.middlewares.use((req, res, next) => {
+      viteServer.middlewares.use((req: any, res: any, next: any) => {
         const requestUrl = new URL(req.url ?? "/", "http://127.0.0.1");
         const pathname = requestUrl.pathname;
         const originalEnd = res.end.bind(res);
