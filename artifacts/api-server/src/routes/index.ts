@@ -1,9 +1,10 @@
+import { Router } from "express";
 import health from "./health.js";
 import registrations from "./registrations.js";
 
-const router: IRouter = Router();
+const router = Router();
 
-router.use(healthRouter);
-router.use(registrationsRouter);
+router.use(health);
+router.use(registrations);
 
 export default router;
