@@ -1,4 +1,6 @@
 {
-  "buildCommand": "pnpm run vercel-build",
-  "outputDirectory": "artifacts/mockup-sandbox/dist"
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @workspace/near-future-school run build",
+  "outputDirectory": "artifacts/near-future-school/.next",
+  "framework": "nextjs"
 }
