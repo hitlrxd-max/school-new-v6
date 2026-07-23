@@ -7,46 +7,41 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PhoneCall, GraduationCap, MapPin, CheckCircle, Lightbulb, Users, MonitorSmartphone, Target, Sparkles, BookOpen, Star, ArrowLeft, ChevronRight, ChevronLeft, Play } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useInView } from "framer-motion";
-import schoolLogo from "@assets/Dشعار_المدرسة_3_1782634252188.png";
-import vrCharacter from "@assets/55c68a5124916ab3b0bc6d9d6f919a73_1782825532321.jpg";
-import introVideo from "@assets/VID_٢٠٢٦٠٦٣٠_٢٠٤٧١٠_1782846394478.mp4";
+const schoolLogo = "/assets/Dشعار_المدرسة_3_1782634252188.png";
+const vrCharacter = "/assets/55c68a5124916ab3b0bc6d9d6f919a73_1782825532321.jpg";
+const introVideo = "/assets/VID_٢٠٢٦٠٦٣٠_٢٠٤٧١٠_1782846394478.mp4";
 
-import img1 from "@assets/FB_IMG_1782825293248_1782825566373.jpg";
-import img2 from "@assets/FB_IMG_1782825266024_1782825572260.jpg";
-import img3 from "@assets/FB_IMG_1782825193631_1782825579990.jpg";
-import img4 from "@assets/FB_IMG_1782825186415_1782825591175.jpg";
-import img5 from "@assets/FB_IMG_1782825170139_1782825597984.jpg";
-import img6 from "@assets/FB_IMG_1782825110618_1782825605832.jpg";
-import img7 from "@assets/FB_IMG_1782825088779_1782825666161.jpg";
-import img8 from "@assets/FB_IMG_1782825048613_1782825674836.jpg";
-import img9 from "@assets/FB_IMG_1782824999550_1782825683474.jpg";
-import img10 from "@assets/FB_IMG_1782824970677_1782825691372.jpg";
-import img11 from "@assets/FB_IMG_1782824946792_1782825698691.jpg";
-import img12 from "@assets/FB_IMG_1782824964058_1782825706471.jpg";
-import img13 from "@assets/FB_IMG_1782824924943_1782825715448.jpg";
-import img14 from "@assets/FB_IMG_1782824889781_1782825724544.jpg";
-import img15 from "@assets/FB_IMG_1782824818213_1782825738538.jpg";
-import img16 from "@assets/FB_IMG_1782824809788_1782825750262.jpg";
-import img17 from "@assets/FB_IMG_1782824704299_1782825756696.jpg";
-import img18 from "@assets/FB_IMG_1782824698623_1782825762800.jpg";
-import imgN1 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٤-١٦-٤٨١_com.facebook.katana-edit_1782846394509.jpg";
-import imgN2 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٣-٤١-٠٥٨_com.facebook.katana-edit_1782846394517.jpg";
-import imgN3 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٣-١٩-٣٠٥_com.facebook.katana-edit_1782846394524.jpg";
-import imgN4 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٢-٥٣-٩٧٢_com.facebook.katana-edit_1782846394532.jpg";
-import imgN5 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٢-٣٦-٢١٧_com.facebook.katana-edit_1782846394540.jpg";
-import imgN6 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٢-١١-٩٧٢_com.facebook.katana-edit_1782846394548.jpg";
-import imgN7 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٠-٥٤-٧٨٤_com.facebook.katana-edit_1782846394555.jpg";
-import imgN8 from "@assets/FB_IMG_1782844782517_1782846394564.jpg";
-import imgN9 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣٧-٤٥-٨١٦_com.facebook.katana-edit_1782846394571.jpg";
-import imgN10 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣٦-٢٨-٢٧٣_com.facebook.katana-edit_1782846394579.jpg";
-import imgN11 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣٢-٠٣-١٤٨_com.facebook.katana-edit_1782846394587.jpg";
-import imgN12 from "@assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣١-٢٢-٤٤٨_com.facebook.katana-edit_1782846394594.jpg";
-
-const galleryImages = [
-  img1, img2, img3, img4, img5, img6, img7, img8, img9,
-  img10, img11, img12, img13, img14, img15, img16, img17, img18,
-  imgN1, imgN2, imgN3, imgN4, imgN5, imgN6, imgN7, imgN8,
-  imgN9, imgN10, imgN11, imgN12
+const galleryImages: string[] = [
+  "/assets/FB_IMG_1782825293248_1782825566373.jpg",
+  "/assets/FB_IMG_1782825266024_1782825572260.jpg",
+  "/assets/FB_IMG_1782825193631_1782825579990.jpg",
+  "/assets/FB_IMG_1782825186415_1782825591175.jpg",
+  "/assets/FB_IMG_1782825170139_1782825597984.jpg",
+  "/assets/FB_IMG_1782825110618_1782825605832.jpg",
+  "/assets/FB_IMG_1782825088779_1782825666161.jpg",
+  "/assets/FB_IMG_1782825048613_1782825674836.jpg",
+  "/assets/FB_IMG_1782824999550_1782825683474.jpg",
+  "/assets/FB_IMG_1782824970677_1782825691372.jpg",
+  "/assets/FB_IMG_1782824946792_1782825698691.jpg",
+  "/assets/FB_IMG_1782824964058_1782825706471.jpg",
+  "/assets/FB_IMG_1782824924943_1782825715448.jpg",
+  "/assets/FB_IMG_1782824889781_1782825724544.jpg",
+  "/assets/FB_IMG_1782824818213_1782825738538.jpg",
+  "/assets/FB_IMG_1782824809788_1782825750262.jpg",
+  "/assets/FB_IMG_1782824704299_1782825756696.jpg",
+  "/assets/FB_IMG_1782824698623_1782825762800.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٤-١٦-٤٨١_com.facebook.katana-edit_1782846394509.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٣-٤١-٠٥٨_com.facebook.katana-edit_1782846394517.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٣-١٩-٣٠٥_com.facebook.katana-edit_1782846394524.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٢-٥٣-٩٧٢_com.facebook.katana-edit_1782846394532.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٢-٣٦-٢١٧_com.facebook.katana-edit_1782846394540.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٢-١١-٩٧٢_com.facebook.katana-edit_1782846394548.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٠-٥٤-٧٨٤_com.facebook.katana-edit_1782846394555.jpg",
+  "/assets/FB_IMG_1782844782517_1782846394564.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣٧-٤٥-٨١٦_com.facebook.katana-edit_1782846394571.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣٦-٢٨-٢٧٣_com.facebook.katana-edit_1782846394579.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣٢-٠٣-١٤٨_com.facebook.katana-edit_1782846394587.jpg",
+  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣١-٢٢-٤٤٨_com.facebook.katana-edit_1782846394594.jpg",
 ];
 
 function AnimatedCounter({ value, suffix = "", duration = 1.5 }: { value: number; suffix?: string; duration?: number }) {
@@ -105,7 +100,7 @@ export default function Home() {
       <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-border shadow-sm">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={schoolLogo as unknown as string} alt="شعار مدرسة ضياء المستقبل" className="h-14 w-auto object-contain drop-shadow-sm" />
+            <img src={schoolLogo} alt="شعار مدرسة ضياء المستقبل" className="h-14 w-auto object-contain drop-shadow-sm" />
             <span className="font-display font-bold text-2xl text-[#1FA0FF]">ضياء المستقبل</span>
           </div>
           <div className="hidden md:flex items-center gap-6 font-medium text-[#1A1A1A]">
@@ -153,14 +148,14 @@ export default function Home() {
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }} className="relative h-full flex flex-col items-center justify-center">
             <div className="relative w-full max-w-md aspect-[3/4] flex items-end justify-center">
               <motion.img
-                src={vrCharacter as unknown as string}
+                src={vrCharacter}
                 alt="شخصية افتراضية"
                 animate={{ y: [0, -15, 0] }}
                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                 className="relative z-10 w-full h-auto object-contain drop-shadow-2xl rounded-3xl"
               />
               <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }} className="absolute top-0 right-0 lg:-right-10 bg-white/80 backdrop-blur-xl p-4 rounded-full shadow-2xl z-20 border border-white">
-                <img src={schoolLogo as unknown as string} alt="شعار المدرسة" className="w-24 h-24 object-contain" />
+                <img src={schoolLogo} alt="شعار المدرسة" className="w-24 h-24 object-contain" />
               </motion.div>
               <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut", delay: 0.5 }} className="absolute top-1/4 -left-4 lg:-left-12 bg-white p-4 rounded-2xl shadow-xl flex items-center gap-3 border border-gray-100 z-20">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "#1FA0FF22" }}>
@@ -214,7 +209,7 @@ export default function Home() {
           <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
             <div className="rounded-3xl overflow-hidden shadow-2xl ring-4 ring-[#1FA0FF]/20 relative">
               <div className="absolute inset-0 z-0 rounded-3xl" style={{ background: "linear-gradient(135deg, #1FA0FF22, #A7FDCC22)" }} />
-              <video src={introVideo as unknown as string} controls className="w-full relative z-10" playsInline preload="metadata">
+              <video src={introVideo} controls className="w-full relative z-10" playsInline preload="metadata">
                 متصفحك لا يدعم تشغيل الفيديو.
               </video>
             </div>
@@ -368,7 +363,7 @@ export default function Home() {
                   >
                     <div className={`relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 ${isCenter ? "w-[300px] md:w-[400px] h-[300px] md:h-[400px]" : "w-[200px] md:w-[300px] h-[200px] md:h-[300px]"}`} style={isCenter ? { boxShadow: "0 0 0 4px #A7FDCC" } : {}}>
                       <div className="absolute inset-0 bg-black/20" />
-                      <img src={galleryImages[index] as unknown as string} alt="نشاط مدرسي" className="w-full h-full object-cover" />
+                      <img src={galleryImages[index]} alt="نشاط مدرسي" className="w-full h-full object-cover" />
                     </div>
                   </motion.div>
                 );
@@ -477,7 +472,7 @@ export default function Home() {
       <footer className="text-white py-12" style={{ background: "linear-gradient(135deg, #1FA0FF 0%, #0D72BB 100%)" }}>
         <div className="container mx-auto px-4 text-center">
           <div className="flex justify-center mb-6">
-            <img src={schoolLogo as unknown as string} alt="شعار المدرسة" className="h-16 w-auto object-contain drop-shadow-lg" />
+            <img src={schoolLogo} alt="شعار المدرسة" className="h-16 w-auto object-contain drop-shadow-lg" />
           </div>
           <h3 className="font-display text-2xl font-bold mb-2">مدرسة ضياء المستقبل</h3>
           <p className="text-white/70 mb-6">نحو جيل مبدع، متفوق، وقائد للمستقبل.</p>

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, CheckCircle, GraduationCap, Loader2 } from "lucide-react";
-import schoolLogo from "@assets/Dشعار_المدرسة_3_1782634252188.png";
+const schoolLogo = "/assets/Dشعار_المدرسة_3_1782634252188.png";
 
 const BRANCHES = [
   "فرع المنطقة الجنوبية – تامزاوة الشاطئ",
@@ -142,7 +142,7 @@ export default function Register() {
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <Link href="/">
             <div className="flex items-center gap-3 cursor-pointer">
-              <img src={schoolLogo as unknown as string} alt="شعار المدرسة" className="h-12 w-auto object-contain" />
+              <img src={schoolLogo} alt="شعار المدرسة" className="h-12 w-auto object-contain" />
               <span className="font-bold text-xl" style={{ color: "#1FA0FF" }}>ضياء المستقبل</span>
             </div>
           </Link>

@@ -16,8 +16,7 @@
     "tsBuildInfoFile": ".tsbuildinfo",
     "plugins": [{ "name": "next" }],
     "paths": {
-      "@/*": ["./*"],
-      "@assets/*": ["../../attached_assets/*"]
+      "@/*": ["./*"]
     }
   },
   "include": [
