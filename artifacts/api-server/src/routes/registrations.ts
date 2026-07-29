@@ -18,8 +18,17 @@ router.post("/registrations", async (req: Request, res: Response) => {
     }
 
     const [row] = await db.insert(registrationsTable).values(parsed.data).returning();
-    res.status(201).json(row);
-  } catch (err: any) {
+// أضف هذا الجزء في دالة POST بعد نجاح عملية الإدخال
+const message = `طلب تسجيل جديد:
+الرقم الوطني: ${parsed.data.nationalId}
+اسم الطالب: ${parsed.data.studentName}
+ولي الأمر: ${parsed.data.parentName}
+رقم الهاتف: ${parsed.data.parentPhone}`;
+
+const encodedMessage = encodeURIComponent(message);
+const whatsappUrl = `https://wa.me/218xxxxxxxxx?text=${encodedMessage}`;
+
+return res.status(201).json({ row, redirectUrl: whatsappUrl });  } catch (err: any) {
     // Log and return a generic error response. We avoid referencing a logger
     // here to keep this file low-dependency and resilient during build/runtime.
     res.status(500).json({ error: "خطأ في الخادم" });
