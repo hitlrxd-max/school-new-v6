@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, registrationsTable, insertRegistrationSchema } from "@/lib/db";
+import { db, registrationsTable, insertRegistrationSchema } from "@workspace/db";
 import { desc } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
@@ -20,12 +20,12 @@ export async function POST(request: NextRequest) {
       .values(parsed.data)
       .returning();
 
-    // 2. رقم الواتساب ورابط التحويل (غير الرقم إلى رقمك الخاص بالرمز الدولي 218)
+    // 2. رقم الواتساب ورابط التحويل
     const whatsappNumber = "218915463080"; 
     const message = "مرحباً، أود إتمام إجراءات التسجيل."; 
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
-    // 3. إرجاع البيانات ورابط التحويل للفرونت-إند
+    // 3. إرجاع البيانات ورابط التحويل
     return NextResponse.json(
       { row, redirectUrl: whatsappUrl }, 
       { status: 201 }
@@ -42,11 +42,11 @@ export async function GET() {
     const rows = await db
       .select()
       .from(registrationsTable)
-      .orderBy(desc(registrationsTable.createdat));
+      .orderBy(desc(registrationsTable.createdAt));
 
     return NextResponse.json(rows);
   } catch (error) {
     console.error("Fetch error:", error);
     return NextResponse.json({ error: "حدث خطأ في جلب البيانات" }, { status: 500 });
   }
-}
+} 
