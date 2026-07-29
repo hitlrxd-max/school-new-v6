@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { db, registrationsTable, insertRegistrationSchema } from "@/lib/db";
 import { desc } from "drizzle-orm";
