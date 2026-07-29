@@ -14,12 +14,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 1. إدخال البيانات في قاعدة البيانات
     const [row] = await db
       .insert(registrationsTable)
       .values(parsed.data)
       .returning();
 
-    return NextResponse.json(row, { status: 201 });
+    // 2. رقم الواتساب ورابط التحويل (غير الرقم إلى رقمك الخاص بالرمز الدولي 218)
+    const whatsappNumber = "218915463080"; 
+    const message = "مرحباً، أود إتمام إجراءات التسجيل."; 
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    // 3. إرجاع البيانات ورابط التحويل للفرونت-إند
+    return NextResponse.json(
+      { row, redirectUrl: whatsappUrl }, 
+      { status: 201 }
+    );
+    
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 });
