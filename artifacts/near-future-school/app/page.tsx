@@ -7,9 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PhoneCall, GraduationCap, MapPin, CheckCircle, Lightbulb, Users, MonitorSmartphone, Target, Sparkles, BookOpen, Star, ArrowLeft, ChevronRight, ChevronLeft, Play } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useInView } from "framer-motion";
-const schoolLogo = "/assets/Dشعار_المدرسة_3_1782634252188.png";
+const schoolLogo = "/assets/school-logo-1782634252188.png";
 const vrCharacter = "/assets/55c68a5124916ab3b0bc6d9d6f919a73_1782825532321.jpg";
-const introVideo = "/assets/VID_٢٠٢٦٠٦٣٠_٢٠٤٧١٠_1782846394478.mp4";
+const introVideo = "/assets/intro-video-1782846394478.mp4";
 
 const galleryImages: string[] = [
   "/assets/FB_IMG_1782825293248_1782825566373.jpg",
@@ -30,18 +30,18 @@ const galleryImages: string[] = [
   "/assets/FB_IMG_1782824809788_1782825750262.jpg",
   "/assets/FB_IMG_1782824704299_1782825756696.jpg",
   "/assets/FB_IMG_1782824698623_1782825762800.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٤-١٦-٤٨١_com.facebook.katana-edit_1782846394509.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٣-٤١-٠٥٨_com.facebook.katana-edit_1782846394517.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٣-١٩-٣٠٥_com.facebook.katana-edit_1782846394524.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٢-٥٣-٩٧٢_com.facebook.katana-edit_1782846394532.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٢-٣٦-٢١٧_com.facebook.katana-edit_1782846394540.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٢-١١-٩٧٢_com.facebook.katana-edit_1782846394548.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٤٠-٥٤-٧٨٤_com.facebook.katana-edit_1782846394555.jpg",
+  "/assets/screenshot-12-1782846394509.jpg",
+  "/assets/screenshot-11-1782846394517.jpg",
+  "/assets/screenshot-10-1782846394524.jpg",
+  "/assets/screenshot-09-1782846394532.jpg",
+  "/assets/screenshot-08-1782846394540.jpg",
+  "/assets/screenshot-07-1782846394548.jpg",
+  "/assets/screenshot-06-1782846394555.jpg",
   "/assets/FB_IMG_1782844782517_1782846394564.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣٧-٤٥-٨١٦_com.facebook.katana-edit_1782846394571.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣٦-٢٨-٢٧٣_com.facebook.katana-edit_1782846394579.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣٢-٠٣-١٤٨_com.facebook.katana-edit_1782846394587.jpg",
-  "/assets/Screenshot_٢٠٢٦-٠٦-٣٠-٢٠-٣١-٢٢-٤٤٨_com.facebook.katana-edit_1782846394594.jpg",
+  "/assets/screenshot-05-1782846394571.jpg",
+  "/assets/screenshot-04-1782846394579.jpg",
+  "/assets/screenshot-03-1782846394587.jpg",
+  "/assets/screenshot-02-1782846394594.jpg",
 ];
 
 function AnimatedCounter({ value, suffix = "", duration = 1.5 }: { value: number; suffix?: string; duration?: number }) {

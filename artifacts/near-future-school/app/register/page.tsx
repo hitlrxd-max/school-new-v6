@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, CheckCircle, GraduationCap, Loader2, MessageCircle } from "lucide-react";
-const schoolLogo = "/assets/Dشعار_المدرسة_3_1782634252188.png";
+const schoolLogo = "/assets/school-logo-1782634252188.png";
 
 const BRANCHES = [
   "فرع المنطقة الجنوبية – تامزاوة الشاطئ",
