@@ -33,5 +33,5 @@ export const insertRegistrationSchema = createInsertSchema(registrationsTable).o
   createdAt: true,
 });
 
-export type InsertRegistration = z.infer<typeof insertRegistrationSchema>;
+export type InsertRegistration = typeof registrationsTable.$inferInsert;
 export type Registration = typeof registrationsTable.$inferSelect;
