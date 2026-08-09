@@ -1,0 +1,2 @@
+- [Supabase setup](supabase-setup.md) — env vars as Replit Secrets need URL normalization; project ref ≠ full URL
+- [Next.js env var pattern](nextjs-env-pattern.md) — NEXT_PUBLIC_* vars need next.config.ts env block + normalizeUrl helper for bare project refs
