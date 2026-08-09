@@ -6,8 +6,8 @@
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock'",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
-    "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs",
+    "typecheck": "tsc --build",
+    "typecheck:libs": "tsc -b lib",
     "dev:mockup": "pnpm --filter @workspace/mockup-sandbox dev",
     "build:mockup": "pnpm --filter @workspace/mockup-sandbox build",
     "vercel-build": "pnpm --filter @workspace/mockup-sandbox build"
@@ -15,14 +15,11 @@
   "engines": {
     "node": ">=18"
   },
+  "dependencies": {
+    "next": "^14.0.0"
+  },
   "devDependencies": {
     "prettier": "^3.8.4",
     "typescript": "~5.9.3"
-  },
-"pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp",
-      "esbuild"
-    ]
   }
 }

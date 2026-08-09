@@ -16,7 +16,8 @@
     "next": "^15.3.3",
     "pg": "^8.22.0",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "@workspace/db": "workspace:*"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
