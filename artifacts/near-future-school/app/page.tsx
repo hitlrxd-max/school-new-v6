@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PhoneCall, GraduationCap, MapPin, CheckCircle, Lightbulb, Users, MonitorSmartphone, Target, Sparkles, BookOpen, Star, ArrowLeft, ChevronRight, ChevronLeft, Play } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useInView } from "framer-motion";
+import LatestNewsSection from "./components/LatestNewsSection";
 const schoolLogo = "/assets/school-logo-1782634252188.png";
 const vrCharacter = "/assets/55c68a5124916ab3b0bc6d9d6f919a73_1782825532321.jpg";
 const introVideo = "/assets/intro-video-1782846394478.mp4";
@@ -108,6 +109,7 @@ export default function Home() {
             <a href="#about" className="hover:text-[#1FA0FF] transition-colors">من نحن</a>
             <a href="#vision" className="hover:text-[#1FA0FF] transition-colors">الرؤية والرسالة</a>
             <a href="#features" className="hover:text-[#1FA0FF] transition-colors">ما يميزنا</a>
+            <a href="#news" className="hover:text-[#1FA0FF] transition-colors">الأخبار</a>
             <a href="#branches" className="hover:text-[#1FA0FF] transition-colors">فروعنا</a>
           </div>
           <Button asChild className="text-white rounded-full px-6 shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5" style={{ background: "linear-gradient(135deg, #1FA0FF, #12DAFB)" }}>
@@ -383,6 +385,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Latest News */}
+      <LatestNewsSection />
 
       {/* Branches */}
       <section id="branches" className="py-24 bg-white">
