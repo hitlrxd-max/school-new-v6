@@ -19,12 +19,7 @@ run = "pnpm --filter @workspace/near-future-school run dev"
 
 [services.production]
 build = [ "pnpm", "--filter", "@workspace/near-future-school", "run", "build" ]
-publicDir = "artifacts/near-future-school/dist/public"
-serve = "static"
-
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+run = [ "pnpm", "--filter", "@workspace/near-future-school", "run", "start" ]
 
 [services.env]
 PORT = "19878"
