@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { PhoneCall, GraduationCap, MapPin, CheckCircle, Lightbulb, Users, MonitorSmartphone, Target, Sparkles, BookOpen, Star, ArrowLeft, ChevronRight, ChevronLeft, Play } from "lucide-react";
+import { PhoneCall, GraduationCap, MapPin, CheckCircle, Lightbulb, Users, MonitorSmartphone, Target, Sparkles, BookOpen, Star, ArrowLeft, ChevronRight, ChevronLeft, Play, Newspaper } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useInView } from "framer-motion";
 import LatestNewsSection from "./components/LatestNewsSection";
@@ -115,6 +115,18 @@ export default function Home() {
           <Button asChild className="text-white rounded-full px-6 shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5" style={{ background: "linear-gradient(135deg, #1FA0FF, #12DAFB)" }}>
             <a href="#contact">تواصل معنا</a>
           </Button>
+        </div>
+        <div className="md:hidden border-t border-[#1FA0FF]/10 bg-white/95 px-4 py-2">
+          <Link
+            href="/news"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-base font-bold text-white shadow-md transition-transform active:scale-[0.98]"
+            style={{ background: "linear-gradient(135deg, #1FA0FF, #12DAFB)" }}
+            aria-label="الانتقال إلى آخر الأخبار"
+          >
+            <Newspaper className="h-5 w-5" aria-hidden="true" />
+            <span>آخر الأخبار والفعاليات</span>
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
       </nav>
 
