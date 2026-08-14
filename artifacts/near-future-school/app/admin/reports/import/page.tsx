@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   ArrowRight, Upload, FileSpreadsheet, AlertCircle,
-  CheckCircle2, XCircle, Download, Loader2, Users
+  CheckCircle2, XCircle, Download, Loader2, Users, RefreshCw, SkipForward
 } from "lucide-react";
 import { GRADE_LABELS } from "@/lib/report-templates";
 import * as XLSX from "xlsx";
@@ -24,6 +24,8 @@ interface ParsedRow {
   academic_year: string;
   gender: string;
   errors: string[];
+  /** enrollment_number exists in DB (warning, not a hard error) */
+  isDbDuplicate?: boolean;
 }
 
 interface ImportResult {
@@ -38,7 +40,7 @@ interface ImportResult {
 /* ------------------------------------------------------------------ */
 
 const REQUIRED_COLUMNS = ["الاسم", "الصف"];
-const COLUMN_MAP: Record<string, keyof Omit<ParsedRow, "index" | "errors">> = {
+const COLUMN_MAP: Record<string, keyof Omit<ParsedRow, "index" | "errors" | "isDbDuplicate">> = {
   "الاسم": "full_name",
   "الاسم الكامل": "full_name",
   "اسم الطالب": "full_name",
@@ -82,14 +84,30 @@ function validateRow(row: ParsedRow, defaultYear: string): ParsedRow {
   return { ...row, grade: grade ? String(grade) : row.grade, errors };
 }
 
-function parseSheet(ws: XLSX.WorkSheet, defaultYear: string): { rows: ParsedRow[]; missingColumns: string[] } {
+/**
+ * Parse the sheet and also return which optional field names were actually
+ * present as columns in the file. Only these fields should be used when
+ * updating existing students (upsert mode), so we never overwrite data
+ * that came from a column that wasn't in this file.
+ */
+function parseSheet(
+  ws: XLSX.WorkSheet,
+  defaultYear: string
+): { rows: ParsedRow[]; missingColumns: string[]; suppliedFields: Set<string> } {
   const raw = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: "" });
-  if (raw.length === 0) return { rows: [], missingColumns: [] };
+  if (raw.length === 0) return { rows: [], missingColumns: [], suppliedFields: new Set() };
 
   const headers = Object.keys(raw[0]);
   const missingColumns = REQUIRED_COLUMNS.filter(
     (c) => !headers.some((h) => COLUMN_MAP[h.trim()] === COLUMN_MAP[c])
   );
+
+  // Collect the mapped field names that were actually present as headers
+  const suppliedFields = new Set<string>();
+  for (const h of headers) {
+    const key = COLUMN_MAP[h.trim()];
+    if (key) suppliedFields.add(key);
+  }
 
   const rows: ParsedRow[] = raw.map((rawRow, idx) => {
     const row: ParsedRow = {
@@ -118,7 +136,94 @@ function parseSheet(ws: XLSX.WorkSheet, defaultYear: string): { rows: ParsedRow[
     return validateRow(row, defaultYear);
   });
 
-  return { rows, missingColumns };
+  return { rows, missingColumns, suppliedFields };
+}
+
+/* ------------------------------------------------------------------ */
+/* Duplicate confirmation dialog                                         */
+/* ------------------------------------------------------------------ */
+
+interface DuplicateDialogProps {
+  count: number;
+  names: string[];
+  onSkip: () => void;
+  onUpdate: () => void;
+  onCancel: () => void;
+}
+
+function DuplicateDialog({ count, names, onSkip, onUpdate, onCancel }: DuplicateDialogProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div dir="rtl" className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+        {/* Header */}
+        <div className="bg-amber-50 border-b border-amber-100 px-6 py-4 flex items-start gap-3">
+          <AlertCircle className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
+          <div>
+            <h2 className="text-base font-bold text-gray-900">
+              {count === 1 ? "طالب موجود مسبقاً" : `${count} طلاب موجودون مسبقاً`}
+            </h2>
+            <p className="text-sm text-gray-600 mt-0.5">
+              أرقام قيدهم مسجّلة في قاعدة البيانات. كيف تريد التعامل معهم؟
+            </p>
+          </div>
+        </div>
+
+        {/* Names list */}
+        {names.length > 0 && (
+          <div className="px-6 py-3 max-h-36 overflow-y-auto border-b border-gray-100">
+            <p className="text-xs font-semibold text-gray-500 mb-1.5">الطلاب المكررون:</p>
+            <ul className="space-y-0.5">
+              {names.slice(0, 10).map((name, i) => (
+                <li key={i} className="text-sm text-gray-700 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                  {name}
+                </li>
+              ))}
+              {names.length > 10 && (
+                <li className="text-xs text-gray-400">و {names.length - 10} آخرون…</li>
+              )}
+            </ul>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="px-6 py-4 space-y-2.5">
+          <button
+            onClick={onUpdate}
+            className="w-full flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-3 text-sm font-semibold transition"
+          >
+            <RefreshCw className="w-4 h-4 shrink-0" />
+            <span className="flex-1 text-right">
+              تحديث بياناتهم
+              <span className="block text-xs font-normal opacity-80 mt-0.5">
+                سيتم تحديث بيانات الطلاب الموجودين بمعلومات الملف الجديدة
+              </span>
+            </span>
+          </button>
+
+          <button
+            onClick={onSkip}
+            className="w-full flex items-center gap-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl px-4 py-3 text-sm font-semibold transition"
+          >
+            <SkipForward className="w-4 h-4 shrink-0" />
+            <span className="flex-1 text-right">
+              تخطّيهم وإضافة الجدد فقط
+              <span className="block text-xs font-normal text-gray-500 mt-0.5">
+                سيتم استيراد الطلاب الجدد فقط وتجاهل الموجودين
+              </span>
+            </span>
+          </button>
+
+          <button
+            onClick={onCancel}
+            className="w-full text-center text-sm text-gray-400 hover:text-gray-600 py-1.5 transition"
+          >
+            إلغاء والعودة للمراجعة
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -135,27 +240,35 @@ export default function ImportStudentsPage() {
   const [loading, setLoading] = useState(false);
   const [checkingDuplicates, setCheckingDuplicates] = useState(false);
   const [importResults, setImportResults] = useState<ImportResult[] | null>(null);
-  const [importSummary, setImportSummary] = useState<{ added: number; failed: number } | null>(null);
+  const [importSummary, setImportSummary] = useState<{ added: number; failed: number; skipped?: number } | null>(null);
   const [parseError, setParseError] = useState("");
+  /** Names shown in the dialog (may come from pre-check or server 409) */
+  const [dialogNames, setDialogNames] = useState<string[]>([]);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  /**
+   * Which optional fields were actually present as columns in the uploaded file.
+   * Used to build a safe partial-update patch during upsert so we never overwrite
+   * DB fields that weren't included in this file.
+   */
+  const [suppliedFields, setSuppliedFields] = useState<Set<string>>(new Set());
 
-  /* ---- Duplicate detection ---- */
-  async function applyDuplicateErrors(parsed: ParsedRow[]): Promise<ParsedRow[]> {
-    // Step 1: detect duplicates within the file itself
-    const seenInFile = new Map<string, number>(); // enrollment_number -> first occurrence index
-    const inFileDuplicates = new Set<number>(); // row indexes that are duplicates
+  /* ---- Duplicate detection (pre-check for UI display only) ---- */
+  async function applyDuplicateFlags(parsed: ParsedRow[]): Promise<ParsedRow[]> {
+    // Step 1: in-file duplicates (hard errors)
+    const seenInFile = new Map<string, number>();
+    const inFileDuplicates = new Set<number>();
     for (const row of parsed) {
       const num = row.enrollment_number.trim();
       if (!num) continue;
       if (seenInFile.has(num)) {
         inFileDuplicates.add(row.index);
-        // also mark the first occurrence
         inFileDuplicates.add(seenInFile.get(num)!);
       } else {
         seenInFile.set(num, row.index);
       }
     }
 
-    // Step 2: check against DB for numbers not already flagged as in-file duplicates
+    // Step 2: check against DB (pre-check for display; server re-validates on POST)
     const numsToCheck = parsed
       .filter((r) => r.enrollment_number.trim() && !inFileDuplicates.has(r.index))
       .map((r) => r.enrollment_number.trim());
@@ -172,22 +285,24 @@ export default function ImportStudentsPage() {
           dbDuplicates = new Set(data.duplicates);
         }
       } catch {
-        // silently ignore — duplicates will be caught at save time if this fails
+        // silently ignore — server will catch duplicates authoritatively on POST
       } finally {
         setCheckingDuplicates(false);
       }
     }
 
-    // Step 3: inject errors into rows
     return parsed.map((row) => {
       const num = row.enrollment_number.trim();
       const newErrors = [...row.errors];
+      let isDbDuplicate = false;
+
       if (num && inFileDuplicates.has(row.index)) {
         newErrors.push("رقم القيد مكرر داخل الملف");
       } else if (num && dbDuplicates.has(num)) {
-        newErrors.push("رقم القيد موجود مسبقاً في قاعدة البيانات");
+        isDbDuplicate = true; // warning, not a hard error
       }
-      return { ...row, errors: newErrors };
+
+      return { ...row, errors: newErrors, isDbDuplicate };
     });
   }
 
@@ -206,10 +321,11 @@ export default function ImportStudentsPage() {
         const data = new Uint8Array(e.target!.result as ArrayBuffer);
         const wb = XLSX.read(data, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const { rows: parsed, missingColumns: missing } = parseSheet(ws, defaultYear);
+        const { rows: parsed, missingColumns: missing, suppliedFields: sf } = parseSheet(ws, defaultYear);
         setMissingColumns(missing);
-        const withDuplicates = await applyDuplicateErrors(parsed);
-        setRows(withDuplicates);
+        setSuppliedFields(sf);
+        const withFlags = await applyDuplicateFlags(parsed);
+        setRows(withFlags);
       } catch {
         setParseError("تعذّر قراءة الملف — تأكد أنه ملف Excel أو CSV صحيح");
       }
@@ -242,35 +358,117 @@ export default function ImportStudentsPage() {
     XLSX.writeFile(wb, "نموذج_استيراد_الطلاب.xlsx");
   }
 
-  /* ---- Import ---- */
-  async function handleImport() {
-    const valid = rows.filter((r) => r.errors.length === 0);
-    if (valid.length === 0) return;
+  /* ---- Build students payload ---- */
+  /**
+   * Always sends the full set of parsed fields (needed for new inserts).
+   * The server uses the accompanying `suppliedFields` list to decide which
+   * fields to touch when updating an existing student, so absent columns
+   * never overwrite existing DB values.
+   */
+  function buildPayload(sourceRows: ParsedRow[]) {
+    return sourceRows.map((r) => ({
+      full_name: r.full_name,
+      enrollment_number: r.enrollment_number || undefined,
+      seat_number: r.seat_number || undefined,
+      grade: parseInt(r.grade),
+      class_section: r.class_section,
+      academic_year: r.academic_year,
+      gender: r.gender,
+    }));
+  }
 
+  /* ---- Core import call ---- */
+  async function callImportApi(
+    eligible: ParsedRow[],
+    mode: "insert" | "skip" | "upsert"
+  ): Promise<
+    | { ok: true; added: number; failed: number; results: ImportResult[] }
+    | { ok: false; conflict: true; duplicateNames: string[] }
+    | { ok: false; conflict: false; error: string }
+  > {
+    const res = await fetch("/api/admin/reports/bulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        students: buildPayload(eligible),
+        mode,
+        // Tell the server exactly which optional fields came from the file so it
+        // can build a safe partial-update patch and never overwrite absent columns.
+        suppliedFields: [...suppliedFields],
+      }),
+    });
+
+    const data = await res.json();
+
+    if (res.status === 409 && data.conflict) {
+      // Server detected duplicates — build names list for the dialog
+      const dupSet = new Set<string>(data.duplicates as string[]);
+      const names = eligible
+        .filter((r) => r.enrollment_number && dupSet.has(r.enrollment_number.trim()))
+        .map((r) => r.full_name)
+        .filter(Boolean);
+      return { ok: false, conflict: true, duplicateNames: names };
+    }
+
+    if (!res.ok) {
+      return { ok: false, conflict: false, error: data.error || "حدث خطأ أثناء الاستيراد" };
+    }
+
+    return { ok: true, added: data.added, failed: data.failed, results: data.results };
+  }
+
+  /* ---- Import entry point ---- */
+  async function handleImportClick() {
+    const eligible = rows.filter((r) => r.errors.length === 0);
+    if (eligible.length === 0) return;
+
+    const hasKnownDuplicates = eligible.some((r) => r.isDbDuplicate);
+
+    if (hasKnownDuplicates) {
+      // Pre-check already found duplicates — show dialog immediately
+      const names = eligible
+        .filter((r) => r.isDbDuplicate)
+        .map((r) => r.full_name)
+        .filter(Boolean);
+      setDialogNames(names);
+      setShowDuplicateDialog(true);
+    } else {
+      // No duplicates known yet — try a direct insert; server may return 409
+      await performImport("insert");
+    }
+  }
+
+  async function performImport(mode: "insert" | "skip" | "upsert") {
+    setShowDuplicateDialog(false);
     setLoading(true);
+    setParseError("");
+
+    const eligible = rows.filter((r) => r.errors.length === 0);
+
     try {
-      const res = await fetch("/api/admin/reports/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          students: valid.map((r) => ({
-            full_name: r.full_name,
-            enrollment_number: r.enrollment_number || undefined,
-            seat_number: r.seat_number || undefined,
-            grade: parseInt(r.grade),
-            class_section: r.class_section,
-            academic_year: r.academic_year,
-            gender: r.gender,
-          })),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setParseError(data.error || "حدث خطأ أثناء الاستيراد");
+      const result = await callImportApi(eligible, mode);
+
+      if (!result.ok && result.conflict) {
+        // Server found duplicates we hadn't seen — show dialog
+        setDialogNames(result.duplicateNames);
+        setShowDuplicateDialog(true);
         return;
       }
-      setImportResults(data.results);
-      setImportSummary({ added: data.added, failed: data.failed });
+
+      if (!result.ok) {
+        setParseError(result.error);
+        return;
+      }
+
+      // Success
+      const skipped = result.results.filter((r) => r.error === "تم تخطيه (موجود مسبقاً)").length;
+      const trueAdded = result.results.filter((r) => r.success).length;
+      const trueFailed = result.results.filter(
+        (r) => !r.success && r.error !== "تم تخطيه (موجود مسبقاً)"
+      ).length;
+
+      setImportResults(result.results);
+      setImportSummary({ added: trueAdded, failed: trueFailed, skipped });
       setRows([]);
     } catch {
       setParseError("خطأ في الاتصال بالخادم");
@@ -279,12 +477,25 @@ export default function ImportStudentsPage() {
     }
   }
 
-  const validCount = rows.filter((r) => r.errors.length === 0).length;
+  /* ---- Derived counts ---- */
   const errorCount = rows.filter((r) => r.errors.length > 0).length;
+  const validCount = rows.filter((r) => r.errors.length === 0).length;
+  const dbDupCount = rows.filter((r) => r.isDbDuplicate && r.errors.length === 0).length;
   const canImport = validCount > 0 && missingColumns.length === 0 && !loading && !checkingDuplicates;
 
   return (
     <div dir="rtl" className="max-w-4xl">
+      {/* Duplicate confirmation dialog */}
+      {showDuplicateDialog && (
+        <DuplicateDialog
+          count={dialogNames.length}
+          names={dialogNames}
+          onUpdate={() => performImport("upsert")}
+          onSkip={() => performImport("skip")}
+          onCancel={() => setShowDuplicateDialog(false)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Link href="/admin/reports" className="text-gray-400 hover:text-gray-600 transition">
@@ -302,14 +513,23 @@ export default function ImportStudentsPage() {
       {/* Results panel (after import) */}
       {importSummary && importResults && (
         <div className="mb-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid gap-4 ${importSummary.skipped ? "grid-cols-3" : "grid-cols-2"}`}>
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
               <CheckCircle2 className="w-8 h-8 text-green-500 shrink-0" />
               <div>
                 <p className="text-2xl font-bold text-green-700">{importSummary.added}</p>
-                <p className="text-sm text-green-600">طالب أُضيف بنجاح</p>
+                <p className="text-sm text-green-600">طالب أُضيف/حُدِّث بنجاح</p>
               </div>
             </div>
+            {importSummary.skipped ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+                <SkipForward className="w-8 h-8 text-amber-500 shrink-0" />
+                <div>
+                  <p className="text-2xl font-bold text-amber-700">{importSummary.skipped}</p>
+                  <p className="text-sm text-amber-600">تم تخطيهم (موجودون)</p>
+                </div>
+              </div>
+            ) : null}
             <div className={`border rounded-xl p-4 flex items-center gap-3 ${importSummary.failed > 0 ? "bg-red-50 border-red-200" : "bg-gray-50 border-gray-200"}`}>
               <XCircle className={`w-8 h-8 shrink-0 ${importSummary.failed > 0 ? "text-red-500" : "text-gray-400"}`} />
               <div>
@@ -327,12 +547,14 @@ export default function ImportStudentsPage() {
                 </p>
               </div>
               <div className="divide-y divide-gray-50">
-                {importResults.filter((r) => !r.success).map((r) => (
-                  <div key={r.index} className="px-4 py-2.5 flex items-center justify-between text-sm">
-                    <span className="font-medium text-gray-800">{r.full_name || `صف ${r.index + 1}`}</span>
-                    <span className="text-red-600 text-xs bg-red-50 px-2 py-0.5 rounded-full">{r.error}</span>
-                  </div>
-                ))}
+                {importResults
+                  .filter((r) => !r.success && r.error !== "تم تخطيه (موجود مسبقاً)")
+                  .map((r) => (
+                    <div key={r.index} className="px-4 py-2.5 flex items-center justify-between text-sm">
+                      <span className="font-medium text-gray-800">{r.full_name || `صف ${r.index + 1}`}</span>
+                      <span className="text-red-600 text-xs bg-red-50 px-2 py-0.5 rounded-full">{r.error}</span>
+                    </div>
+                  ))}
               </div>
             </div>
           )}
@@ -419,7 +641,7 @@ export default function ImportStudentsPage() {
             <div className="mt-4 space-y-4">
               {/* Summary bar */}
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
                   <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
                     <Users className="w-4 h-4 text-blue-500" />
                     {rows.length} صف في الملف
@@ -427,6 +649,11 @@ export default function ImportStudentsPage() {
                   {validCount > 0 && (
                     <span className="flex items-center gap-1 text-sm text-green-600">
                       <CheckCircle2 className="w-4 h-4" /> {validCount} صحيح
+                    </span>
+                  )}
+                  {dbDupCount > 0 && (
+                    <span className="flex items-center gap-1 text-sm text-amber-600">
+                      <AlertCircle className="w-4 h-4" /> {dbDupCount} موجود مسبقاً
                     </span>
                   )}
                   {errorCount > 0 && (
@@ -443,15 +670,36 @@ export default function ImportStudentsPage() {
                     إعادة الاختيار
                   </button>
                   <button
-                    onClick={handleImport}
+                    onClick={handleImportClick}
                     disabled={!canImport}
                     className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition"
                   >
                     {(loading || checkingDuplicates) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                    {loading ? "جاري الاستيراد…" : checkingDuplicates ? "جاري التحقق من التكرار…" : `استيراد ${validCount} طالب`}
+                    {loading
+                      ? "جاري الاستيراد…"
+                      : checkingDuplicates
+                      ? "جاري التحقق من التكرار…"
+                      : `استيراد ${validCount} طالب`}
                   </button>
                 </div>
               </div>
+
+              {/* DB duplicates notice */}
+              {dbDupCount > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-500" />
+                  <div>
+                    <p className="font-semibold">
+                      {dbDupCount === 1
+                        ? "طالب واحد موجود مسبقاً في قاعدة البيانات"
+                        : `${dbDupCount} طلاب موجودون مسبقاً في قاعدة البيانات`}
+                    </p>
+                    <p className="mt-0.5 text-amber-700 text-xs">
+                      عند الضغط على «استيراد» سيُطلب منك اختيار: تحديث بياناتهم أو تخطيهم.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto max-h-[480px] overflow-y-auto">
@@ -473,9 +721,14 @@ export default function ImportStudentsPage() {
                         const gradeNum = parseInt(row.grade);
                         const gradeLabel = GRADE_LABELS[gradeNum] ?? row.grade;
                         return (
-                          <tr key={row.index} className={hasError ? "bg-red-50" : ""}>
+                          <tr
+                            key={row.index}
+                            className={hasError ? "bg-red-50" : row.isDbDuplicate ? "bg-amber-50" : ""}
+                          >
                             <td className="px-3 py-2 text-gray-400 text-xs">{row.index + 1}</td>
-                            <td className="px-3 py-2 font-medium text-gray-900">{row.full_name || <span className="text-gray-300 italic">فارغ</span>}</td>
+                            <td className="px-3 py-2 font-medium text-gray-900">
+                              {row.full_name || <span className="text-gray-300 italic">فارغ</span>}
+                            </td>
                             <td className="px-3 py-2 text-gray-600">{gradeLabel}</td>
                             <td className="px-3 py-2 text-gray-500">{row.enrollment_number || "—"}</td>
                             <td className="px-3 py-2 text-gray-500">{row.seat_number || "—"}</td>
@@ -485,6 +738,11 @@ export default function ImportStudentsPage() {
                                 <span className="inline-flex items-center gap-1 text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
                                   <XCircle className="w-3 h-3" />
                                   {row.errors[0]}
+                                </span>
+                              ) : row.isDbDuplicate ? (
+                                <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                                  <AlertCircle className="w-3 h-3" />
+                                  موجود مسبقاً
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
