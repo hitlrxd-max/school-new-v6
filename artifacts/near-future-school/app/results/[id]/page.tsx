@@ -4,6 +4,7 @@ import Link from "next/link";
 import { GraduationCap, ArrowRight } from "lucide-react";
 import { getTemplateById, GRADE_LABELS, calcPeriodMax, calcExamMax, calcTotalMax, calcTotalMin } from "@/lib/report-templates";
 import PrintButton from "@/app/components/PrintButton";
+import DownloadPDFButton from "@/app/components/DownloadPDFButton";
 
 export const metadata = { title: "صحيفة النتيجة — مدرسة ضياء المستقبل" };
 
@@ -53,6 +54,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
             مدرسة ضياء المستقبل
           </Link>
           <div className="flex items-center gap-3">
+            <DownloadPDFButton studentName={student.full_name} />
             <PrintButton />
             <Link href="/results" className="flex items-center gap-1 text-sm text-blue-600 hover:underline">
               <ArrowRight className="w-4 h-4" />بحث جديد
@@ -63,7 +65,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
 
       <div className="max-w-5xl mx-auto px-2 md:px-4 py-6 md:py-10">
         {/* Report Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0">
+        <div id="report-card" className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0">
           {/* Header */}
           <div className="border-b border-gray-100 px-6 py-6 text-center bg-gradient-to-l from-blue-50 to-white print:bg-white print:border-b print:border-gray-400 print:py-3">
             {/* Print-only official header */}

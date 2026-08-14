@@ -7,6 +7,7 @@ import {
 import { getTemplateById, GRADE_LABELS, calcTotalMax, calcTotalMin, calcPeriodMax, calcExamMax } from "@/lib/report-templates";
 import ReportPublishButtons from "./ReportPublishButtons";
 import PrintButton from "@/app/components/PrintButton";
+import DownloadPDFButton from "@/app/components/DownloadPDFButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   return { title: "صحيفة الطالب — لوحة التحكم" };
@@ -75,6 +76,10 @@ export default async function StudentReportPage({ params }: { params: Promise<{ 
             className="flex items-center gap-1.5 border border-blue-200 text-blue-600 px-3 py-2 rounded-xl text-sm hover:bg-blue-50 transition print:hidden">
             <ClipboardEdit className="w-4 h-4" />إدخال الدرجات
           </Link>
+          <DownloadPDFButton
+            studentName={student.full_name}
+            className="flex items-center gap-1.5 border border-emerald-200 text-emerald-700 px-3 py-2 rounded-xl text-sm hover:bg-emerald-50 transition disabled:opacity-60 print:hidden"
+          />
           <PrintButton
             label="طباعة الصحيفة"
             className="flex items-center gap-1.5 border border-gray-200 text-gray-600 px-3 py-2 rounded-xl text-sm hover:bg-gray-50 transition print:hidden"
@@ -86,7 +91,7 @@ export default async function StudentReportPage({ params }: { params: Promise<{ 
       {report && <div className="print:hidden"><ReportPublishButtons studentId={id} report={report} /></div>}
 
       {/* Report Card */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mt-4 print:shadow-none print:border-0">
+      <div id="report-card" className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mt-4 print:shadow-none print:border-0">
         {/* Report Header */}
         <div className="border-b border-gray-100 px-6 py-5 text-center print:py-3 print:border-gray-400">
           {/* Print-only official header */}
