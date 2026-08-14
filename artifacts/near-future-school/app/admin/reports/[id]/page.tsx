@@ -94,7 +94,7 @@ export default async function StudentReportPage({ params }: { params: Promise<{ 
       <div id="report-card" className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mt-4 print:shadow-none print:border-0">
         {/* Report Header */}
         <div className="border-b border-gray-100 px-6 py-5 text-center print:py-3 print:border-gray-400">
-          {/* Print-only official header */}
+          {/* Print-only official top bar */}
           <div className="hidden print:block mb-2">
             <div className="flex items-center justify-between text-[9pt] text-gray-600 mb-1">
               <span>الجمهورية اليمنية</span>
@@ -103,6 +103,14 @@ export default async function StudentReportPage({ params }: { params: Promise<{ 
             <div className="border-t border-b border-gray-400 py-1.5 my-1">
               <p className="text-[7pt] text-gray-500">إدارة تربية وتعليم محافظة ——</p>
             </div>
+          </div>
+          {/* Logo */}
+          <div className="flex justify-center mb-3 print:mb-2">
+            <img
+              src="/assets/school-logo-1782634252188.png"
+              alt="شعار مدرسة ضياء المستقبل"
+              className="w-[90px] h-[90px] object-contain print:w-[70px] print:h-[70px]"
+            />
           </div>
           <h2 className="text-xl font-bold text-gray-900 print:text-[16pt]">مدرسة ضياء المستقبل</h2>
           <h3 className="text-base font-semibold text-blue-600 mt-1 print:text-[12pt] print:text-gray-800">بطاقة تقدير الدرجات</h3>
