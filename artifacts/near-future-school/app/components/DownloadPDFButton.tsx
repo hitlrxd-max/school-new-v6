@@ -45,6 +45,40 @@ export default function DownloadPDFButton({
           // Expand the cloned root so it doesn't clip at the viewport edge
           clone.style.width = fullWidth + "px";
           clone.style.overflow = "visible";
+
+          // Remove screen-only decorations (rounded corners, shadow, border)
+          // so the PDF looks like a clean official document.
+          const classesToRemove = [
+            "rounded-2xl", "rounded-xl", "rounded-lg",
+            "shadow-sm", "shadow", "shadow-md", "shadow-lg",
+            "border", "border-gray-200",
+          ];
+          classesToRemove.forEach((cls) => clone.classList.remove(cls));
+          clone.style.borderRadius = "0";
+          clone.style.boxShadow = "none";
+          clone.style.border = "none";
+
+          // Show elements that are hidden on screen but should appear in the
+          // official document (e.g. the official ministry header).
+          clone.querySelectorAll<HTMLElement>(".hidden").forEach((el) => {
+            if (el.classList.contains("print:block")) {
+              el.style.display = "block";
+            }
+          });
+
+          // Apply print-like background overrides: remove gradient from header
+          clone.querySelectorAll<HTMLElement>("[class*='bg-gradient']").forEach((el) => {
+            el.style.background = "#ffffff";
+          });
+          // Light gray info strip → white
+          clone.querySelectorAll<HTMLElement>(".bg-gray-50").forEach((el) => {
+            el.style.background = "#ffffff";
+          });
+          // Darken the header border that separates sections
+          clone.querySelectorAll<HTMLElement>(".border-b.border-gray-100").forEach((el) => {
+            el.style.borderBottomColor = "#9ca3af";
+          });
+
           // Remove overflow constraints from all scrollable inner containers
           clone.querySelectorAll<HTMLElement>(".overflow-x-auto").forEach((div) => {
             div.style.overflow = "visible";
