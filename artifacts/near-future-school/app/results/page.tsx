@@ -37,7 +37,7 @@ async function SearchResults({ query }: { query: string }) {
     students.map(async (student) => {
       const { data: report } = await admin
         .from("student_reports")
-        .select("id, status, result_blocked, result_label, total_score, total_max")
+        .select("id, status, result_blocked, result_label, total_score, total_max, rank_in_class")
         .eq("student_id", student.id)
         .eq("academic_year", student.academic_year)
         .single();
@@ -77,13 +77,28 @@ async function SearchResults({ query }: { query: string }) {
                 )}
               </div>
             </div>
-            {available && report.result_label && (
-              <div className={`mt-3 inline-block text-sm font-bold px-4 py-1 rounded-full ${
-                report.result_label.includes("ناجح") ? "bg-green-100 text-green-700"
-                : report.result_label === "راسب" ? "bg-red-100 text-red-700"
-                : "bg-gray-100 text-gray-600"
-              }`}>
-                {report.result_label}
+            {available && (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                {report.result_label && (
+                  <span className={`text-sm font-bold px-4 py-1 rounded-full ${
+                    report.result_label.includes("ناجح") ? "bg-green-100 text-green-700"
+                    : report.result_label === "راسب" ? "bg-red-100 text-red-700"
+                    : "bg-gray-100 text-gray-600"
+                  }`}>
+                    {report.result_label}
+                  </span>
+                )}
+                {report.total_score != null && (
+                  <span className="text-sm text-gray-500">
+                    المجموع: <span className="font-bold text-gray-800">{report.total_score}</span>
+                    {report.total_max ? <span className="text-gray-400"> / {report.total_max}</span> : null}
+                  </span>
+                )}
+                {report.rank_in_class != null && (
+                  <span className="text-sm text-gray-500">
+                    الترتيب: <span className="font-bold text-blue-700">{report.rank_in_class}</span>
+                  </span>
+                )}
               </div>
             )}
           </div>
