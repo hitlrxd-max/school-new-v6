@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { GraduationCap, AlertCircle, Search } from "lucide-react";
 import { GRADE_LABELS } from "@/lib/report-templates";
+import MobileNavSidebar from "@/app/components/MobileNavSidebar";
 
 export const metadata = {
   title: "نتائج الطلاب — مدرسة ضياء المستقبل",
@@ -166,14 +167,13 @@ export default async function ResultsPage({
             className="flex items-center gap-2 font-bold text-blue-700"
           >
             <GraduationCap className="w-6 h-6" />
-            مدرسة ضياء المستقبل
+            <span className="hidden sm:inline">مدرسة ضياء المستقبل</span>
           </Link>
-          <Link
-            href="/news"
-            className="text-sm text-gray-600 hover:text-blue-600 transition"
-          >
-            الأخبار
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/news" className="hidden md:inline text-sm text-gray-600 hover:text-blue-600 transition">الأخبار</Link>
+            <Link href="/" className="hidden md:inline text-sm text-gray-600 hover:text-blue-600 transition">الرئيسية</Link>
+            <MobileNavSidebar />
+          </div>
         </div>
       </nav>
 

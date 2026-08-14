@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Calendar, Tag, ArrowLeft, Newspaper, Image as ImageIcon, Video } from "lucide-react";
+import { Calendar, Tag, ArrowLeft, Newspaper, Image as ImageIcon, Video, GraduationCap } from "lucide-react";
 import type { News, NewsMedia } from "@/lib/supabase/types";
+import MobileNavSidebar from "@/app/components/MobileNavSidebar";
 
 export const revalidate = 60;
 
@@ -58,12 +59,20 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
     <div className="min-h-screen bg-[#F0FAFF]" dir="rtl">
       {/* Sticky breadcrumb */}
       <div className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-blue-50 px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center gap-2 text-sm text-gray-500">
-          <Link href="/" className="hover:text-blue-600 transition">الرئيسية</Link>
-          <span>/</span>
-          <Link href="/news" className="hover:text-blue-600 transition">الأخبار</Link>
-          <span>/</span>
-          <span className="text-gray-800 font-medium truncate max-w-xs">{item.title}</span>
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm text-gray-500 min-w-0">
+            <Link href="/" className="hover:text-blue-600 transition shrink-0">الرئيسية</Link>
+            <span>/</span>
+            <Link href="/news" className="hover:text-blue-600 transition shrink-0">الأخبار</Link>
+            <span>/</span>
+            <span className="text-gray-800 font-medium truncate">{item.title}</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href="/" className="hidden sm:flex items-center gap-1.5 font-bold text-blue-700 text-sm">
+              <GraduationCap className="w-5 h-5" />
+            </Link>
+            <MobileNavSidebar />
+          </div>
         </div>
       </div>
 

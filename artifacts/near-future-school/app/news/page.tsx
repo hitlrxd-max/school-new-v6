@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Newspaper, Calendar, Tag, ArrowLeft } from "lucide-react";
+import { Newspaper, Calendar, Tag, ArrowLeft, GraduationCap } from "lucide-react";
 import type { News } from "@/lib/supabase/types";
+import MobileNavSidebar from "@/app/components/MobileNavSidebar";
 
 const CATEGORY_COLORS: Record<string, string> = {
   عام: "bg-gray-100 text-gray-600",
@@ -34,9 +35,24 @@ export default async function NewsPage() {
 
   return (
     <div className="min-h-screen bg-[#F0FAFF]" dir="rtl">
+      {/* Sticky Nav */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-blue-100 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 font-bold text-blue-700">
+            <GraduationCap className="w-6 h-6" />
+            <span className="hidden sm:inline">مدرسة ضياء المستقبل</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/results" className="hidden md:inline text-sm font-medium text-gray-600 hover:text-blue-600 transition">النتائج</Link>
+            <Link href="/" className="hidden md:inline text-sm font-medium text-gray-600 hover:text-blue-600 transition">الرئيسية</Link>
+            <MobileNavSidebar />
+          </div>
+        </div>
+      </nav>
+
       {/* Header */}
       <div
-        className="relative py-20 px-4 text-center overflow-hidden"
+        className="relative py-16 px-4 text-center overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0D72BB 0%, #1FA0FF 60%, #12DAFB 100%)" }}
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

@@ -5,6 +5,7 @@ import { GraduationCap, ArrowRight } from "lucide-react";
 import { getTemplateById, GRADE_LABELS, calcPeriodMax, calcExamMax, calcTotalMax, calcTotalMin } from "@/lib/report-templates";
 import PrintButton from "@/app/components/PrintButton";
 import DownloadPDFButton from "@/app/components/DownloadPDFButton";
+import MobileNavSidebar from "@/app/components/MobileNavSidebar";
 
 export const metadata = { title: "صحيفة النتيجة — مدرسة ضياء المستقبل" };
 
@@ -53,12 +54,13 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
             <GraduationCap className="w-6 h-6" />
             مدرسة ضياء المستقبل
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <DownloadPDFButton studentName={student.full_name} enrollmentNumber={student.enrollment_number ?? undefined} />
             <PrintButton />
-            <Link href="/results" className="flex items-center gap-1 text-sm text-blue-600 hover:underline">
+            <Link href="/results" className="hidden sm:flex items-center gap-1 text-sm text-blue-600 hover:underline">
               <ArrowRight className="w-4 h-4" />بحث جديد
             </Link>
+            <MobileNavSidebar />
           </div>
         </div>
       </nav>
