@@ -2,11 +2,13 @@
 
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight, Upload, FileSpreadsheet, AlertCircle,
   CheckCircle2, XCircle, Download, Loader2, Users, RefreshCw, SkipForward
 } from "lucide-react";
 import { GRADE_LABELS } from "@/lib/report-templates";
+import { createClient } from "@/lib/supabase/client";
 import * as XLSX from "xlsx";
 
 
@@ -231,6 +233,7 @@ function DuplicateDialog({ count, names, onSkip, onUpdate, onCancel }: Duplicate
 /* ------------------------------------------------------------------ */
 
 export default function ImportStudentsPage() {
+  const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [rows, setRows] = useState<ParsedRow[]>([]);
@@ -242,6 +245,8 @@ export default function ImportStudentsPage() {
   const [importResults, setImportResults] = useState<ImportResult[] | null>(null);
   const [importSummary, setImportSummary] = useState<{ added: number; failed: number; skipped?: number } | null>(null);
   const [parseError, setParseError] = useState("");
+  /** True when the duplicate pre-check returned 401 (session expired) */
+  const [sessionExpired, setSessionExpired] = useState(false);
   /** Names shown in the dialog (may come from pre-check or server 409) */
   const [dialogNames, setDialogNames] = useState<string[]>([]);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
@@ -280,12 +285,18 @@ export default function ImportStudentsPage() {
         const res = await fetch(
           `/api/admin/reports/bulk?check=${encodeURIComponent(numsToCheck.join(","))}`
         );
+        if (res.status === 401) {
+          setSessionExpired(true);
+          setParseError("انتهت جلستك — يرجى تسجيل الدخول مجدداً قبل المتابعة");
+          setCheckingDuplicates(false);
+          return parsed; // return rows without DB flags; import will be blocked
+        }
         if (res.ok) {
           const data = await res.json() as { duplicates: string[] };
           dbDuplicates = new Set(data.duplicates);
         }
       } catch {
-        // silently ignore — server will catch duplicates authoritatively on POST
+        // silently ignore network errors — server will catch duplicates authoritatively on POST
       } finally {
         setCheckingDuplicates(false);
       }
@@ -309,6 +320,7 @@ export default function ImportStudentsPage() {
   /* ---- File parsing ---- */
   const processFile = useCallback((file: File) => {
     setParseError("");
+    setSessionExpired(false);
     setRows([]);
     setMissingColumns([]);
     setImportResults(null);
@@ -377,6 +389,13 @@ export default function ImportStudentsPage() {
     }));
   }
 
+  /* ---- Sign out and redirect to login (clears stale cookies first) ---- */
+  async function handleExpiredSessionLogin() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/admin/login");
+  }
+
   /* ---- Core import call ---- */
   async function callImportApi(
     eligible: ParsedRow[],
@@ -384,7 +403,8 @@ export default function ImportStudentsPage() {
   ): Promise<
     | { ok: true; added: number; failed: number; results: ImportResult[] }
     | { ok: false; conflict: true; duplicateNames: string[] }
-    | { ok: false; conflict: false; error: string }
+    | { ok: false; conflict: false; sessionExpired: true; error: string }
+    | { ok: false; conflict: false; sessionExpired?: false; error: string }
   > {
     const res = await fetch("/api/admin/reports/bulk", {
       method: "POST",
@@ -397,6 +417,15 @@ export default function ImportStudentsPage() {
         suppliedFields: [...suppliedFields],
       }),
     });
+
+    if (res.status === 401) {
+      return {
+        ok: false,
+        conflict: false,
+        sessionExpired: true,
+        error: "انتهت جلستك — يرجى تسجيل الدخول مجدداً قبل المتابعة",
+      };
+    }
 
     const data = await res.json();
 
@@ -456,6 +485,9 @@ export default function ImportStudentsPage() {
       }
 
       if (!result.ok) {
+        if ("sessionExpired" in result && result.sessionExpired) {
+          setSessionExpired(true);
+        }
         setParseError(result.error);
         return;
       }
@@ -481,7 +513,7 @@ export default function ImportStudentsPage() {
   const errorCount = rows.filter((r) => r.errors.length > 0).length;
   const validCount = rows.filter((r) => r.errors.length === 0).length;
   const dbDupCount = rows.filter((r) => r.isDbDuplicate && r.errors.length === 0).length;
-  const canImport = validCount > 0 && missingColumns.length === 0 && !loading && !checkingDuplicates;
+  const canImport = validCount > 0 && missingColumns.length === 0 && !loading && !checkingDuplicates && !sessionExpired;
 
   return (
     <div dir="rtl" className="max-w-4xl">
@@ -620,7 +652,16 @@ export default function ImportStudentsPage() {
 
           {parseError && (
             <div className="mt-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" /> {parseError}
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span className="flex-1">{parseError}</span>
+              {sessionExpired && (
+                <button
+                  onClick={handleExpiredSessionLogin}
+                  className="shrink-0 underline font-semibold hover:text-red-900 transition"
+                >
+                  تسجيل الدخول
+                </button>
+              )}
             </div>
           )}
 
