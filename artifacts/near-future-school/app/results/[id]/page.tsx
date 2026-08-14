@@ -81,7 +81,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
             {/* Logo */}
             <div className="flex justify-center mb-3 print:mb-2">
               <img
-                src="/assets/school-logo-1782634252188.png"
+                src="/school-logo.jpg"
                 alt="شعار مدرسة ضياء المستقبل"
                 className="w-[90px] h-[90px] object-contain print:w-[70px] print:h-[70px]"
               />
