@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
-  Plus, Search, ClipboardList, CheckCircle2, Clock, Ban, Users, Upload
+  Plus, Search, ClipboardList, CheckCircle2, Clock, Ban, Users, Upload, Download
 } from "lucide-react";
 import { GRADE_LABELS } from "@/lib/report-templates";
 import StudentRow from "./StudentRow";
@@ -70,6 +70,13 @@ export default async function ReportsPage({
           <p className="text-gray-500 text-sm mt-1">إدارة نتائج الطلاب وصحائف التقدير</p>
         </div>
         <div className="flex items-center gap-2">
+          <a
+            href={`/api/admin/reports/export?year=${year}${grade ? `&grade=${grade}` : ""}${status ? `&status=${status}` : ""}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+            className="flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition"
+          >
+            <Download className="w-4 h-4 text-green-500" />
+            تصدير Excel
+          </a>
           <Link
             href="/admin/reports/import"
             className="flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition"
