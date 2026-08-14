@@ -95,9 +95,10 @@ export default function MobileNavSidebar() {
                         bg-gradient-to-l from-blue-50 to-white shrink-0">
           <div className="flex items-center gap-2">
             <img
-              src="/school-logo-transparent.png"
+              src="/assets/school-logo-1782634252188.png"
               alt="شعار المدرسة"
               className="w-8 h-8 object-contain"
+              style={{ mixBlendMode: "multiply" }}
             />
             <span className="font-bold text-blue-700 text-base">ضياء المستقبل</span>
           </div>

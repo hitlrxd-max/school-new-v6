@@ -73,9 +73,10 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
             {/* Logo */}
             <div className="flex justify-center mb-3 print:mb-2">
               <img
-                src="/school-logo-transparent.png"
+                src="/assets/school-logo-1782634252188.png"
                 alt="شعار مدرسة ضياء المستقبل"
-                className="w-[90px] h-[90px] object-contain print:w-[70px] print:h-[70px]"
+                className="w-[90px] h-[90px] object-contain print:w-[70px] print:h-[70px] mix-blend-mode-multiply"
+                style={{ mixBlendMode: "multiply" }}
               />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 print:text-[16pt]">مدرسة ضياء المستقبل</h1>
