@@ -81,10 +81,11 @@ export default function DownloadPDFButton({
         const ctx = pageCanvas.getContext("2d")!;
         ctx.drawImage(canvas, 0, -yOffset);
 
-        const imgData = pageCanvas.toDataURL("image/jpeg", 0.92);
+        // PNG بدلاً من JPEG لجودة أعلى (#34)
+        const imgData = pageCanvas.toDataURL("image/png");
         const printH = sliceH / pxPerMm; // mm
 
-        pdf.addImage(imgData, "JPEG", 0, 0, A4_W, printH);
+        pdf.addImage(imgData, "PNG", 0, 0, A4_W, printH);
 
         yOffset += pageHeightPx;
         pageNum++;

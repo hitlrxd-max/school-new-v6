@@ -1,6 +1,7 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import * as XLSX from "xlsx";
+// @ts-ignore — xlsx-js-style is a styled fork of SheetJS with identical API
+import XLSXStyle from "xlsx-js-style";
 import { GRADE_LABELS } from "@/lib/report-templates";
 
 const SCORE_BUCKETS = [
@@ -20,6 +21,30 @@ function classify(report: { result_label: string | null }) {
   return "unlabeled";
 }
 
+// Cell style helpers (#28)
+const STYLE_HEADER = {
+  font: { bold: true, color: { rgb: "FFFFFF" } },
+  fill: { fgColor: { rgb: "1FA0FF" } },
+  alignment: { horizontal: "center", wrapText: true },
+};
+const STYLE_PASSED = {
+  font: { bold: true, color: { rgb: "065F46" } },
+  fill: { fgColor: { rgb: "D1FAE5" } },
+  alignment: { horizontal: "center" },
+};
+const STYLE_FAILED = {
+  font: { bold: true, color: { rgb: "991B1B" } },
+  fill: { fgColor: { rgb: "FEE2E2" } },
+  alignment: { horizontal: "center" },
+};
+const STYLE_OTHER = {
+  font: { color: { rgb: "92400E" } },
+  fill: { fgColor: { rgb: "FEF3C7" } },
+  alignment: { horizontal: "center" },
+};
+const STYLE_CENTER = { alignment: { horizontal: "center" } };
+const STYLE_BOLD = { font: { bold: true } };
+
 export async function GET(req: NextRequest) {
   // Auth check
   const supabase = await createClient();
@@ -34,9 +59,16 @@ export async function GET(req: NextRequest) {
 
   let q = admin
     .from("students")
-    .select(`id, grade, student_reports!student_reports_student_id_fkey (status, total_score, total_max, result_label, academic_year)`)
+    .select(`
+      id, full_name, grade,
+      student_reports!student_reports_student_id_fkey (
+        status, total_score, total_max, result_label, academic_year
+      )
+    `)
     .eq("academic_year", year)
-    .eq("student_reports.academic_year", year);
+    .eq("student_reports.academic_year", year)
+    .order("grade")
+    .order("full_name");
 
   if (gradeFilter) q = q.eq("grade", parseInt(gradeFilter));
 
@@ -44,12 +76,17 @@ export async function GET(req: NextRequest) {
 
   const rows = (students ?? []) as Array<{
     id: string;
+    full_name: string;
     grade: number;
-    student_reports: Array<{ status: string; total_score: number | null; total_max: number | null; result_label: string | null; academic_year: string }>;
+    student_reports: Array<{
+      status: string;
+      total_score: number | null;
+      total_max: number | null;
+      result_label: string | null;
+      academic_year: string;
+    }>;
   }>;
 
-  // Each student has at most one report for the selected year (unique constraint).
-  // The embedded filter ensures only the matching year's report is returned.
   const withReports = rows.filter((s) => s.student_reports?.length > 0);
   const totalStudents = rows.length;
   const gradedStudents = withReports.length;
@@ -92,22 +129,19 @@ export async function GET(req: NextRequest) {
           if (r.total_score != null) { gSum += r.total_score; gCount++; }
         }
         return {
-          grade: g,
-          gradeLabel: GRADE_LABELS[g],
+          grade: g, gradeLabel: GRADE_LABELS[g],
           total: gradeStudents.length,
-          passed: gPassed,
-          failed: gFailed,
-          other: gOther,
+          passed: gPassed, failed: gFailed, other: gOther,
           avgScore: gCount > 0 ? gSum / gCount : null,
         };
       }).filter((row) => row.total > 0)
     : [];
 
   // ── Build workbook ──────────────────────────────────────────────────────────
-  const wb = XLSX.utils.book_new();
+  const wb = XLSXStyle.utils.book_new();
 
-  // Sheet 1: Summary
-  const summaryRows = [
+  // ── Sheet 1: ملخص الإحصائيات ─────────────────────────────────────────────
+  const summaryData = [
     ["إحصائيات الصف — ملخص عام"],
     [],
     ["العام الدراسي", year],
@@ -127,48 +161,126 @@ export async function GET(req: NextRequest) {
     ["الفئة", "عدد الطلاب"],
     ...distribution.map((b) => [b.label, b.count]),
   ];
-  const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
-
-  // Column widths for summary
+  const wsSummary = XLSXStyle.utils.aoa_to_sheet(summaryData);
   wsSummary["!cols"] = [{ wch: 30 }, { wch: 20 }];
+  // Style title
+  if (wsSummary["A1"]) wsSummary["A1"].s = { font: { bold: true, sz: 14 } };
+  // Style section headers
+  if (wsSummary["A6"]) wsSummary["A6"].s = STYLE_HEADER;
+  if (wsSummary["B6"]) wsSummary["B6"].s = STYLE_HEADER;
+  if (wsSummary["A16"]) wsSummary["A16"].s = { font: { bold: true, color: { rgb: "1FA0FF" } } };
+  if (wsSummary["A17"]) wsSummary["A17"].s = STYLE_HEADER;
+  if (wsSummary["B17"]) wsSummary["B17"].s = STYLE_HEADER;
+  XLSXStyle.utils.book_append_sheet(wb, wsSummary, "ملخص الإحصائيات");
 
-  // Style the header cell (xlsx community edition has limited styling, we use cell format)
-  XLSX.utils.book_append_sheet(wb, wsSummary, "ملخص الإحصائيات");
-
-  // Sheet 2: Grade breakdown (only when no grade filter)
+  // ── Sheet 2: تفصيل حسب الصف ──────────────────────────────────────────────
   if (gradeBreakdown.length > 0) {
-    const breakdownHeader = [
-      "الصف",
-      "إجمالي الطلاب",
-      "الناجحون",
-      "الراسبون",
-      "غائب / أخرى",
-      "متوسط المجموع",
-      "نسبة النجاح (%)",
+    const headers = [
+      "الصف", "إجمالي الطلاب", "الناجحون", "الراسبون",
+      "غائب / أخرى", "متوسط المجموع", "نسبة النجاح (%)",
     ];
     const breakdownData = gradeBreakdown.map((row) => {
       const pr = row.total > 0 ? Math.round((row.passed / row.total) * 100) : 0;
       return [
-        row.gradeLabel,
-        row.total,
-        row.passed,
-        row.failed,
-        row.other,
-        row.avgScore != null ? parseFloat(row.avgScore.toFixed(2)) : "",
+        row.gradeLabel, row.total, row.passed, row.failed,
+        row.other, row.avgScore != null ? parseFloat(row.avgScore.toFixed(2)) : "",
         pr,
       ];
     });
 
-    const wsBreakdown = XLSX.utils.aoa_to_sheet([breakdownHeader, ...breakdownData]);
+    const wsBreakdown = XLSXStyle.utils.aoa_to_sheet([headers, ...breakdownData]);
+
+    // Style header row
+    ["A1","B1","C1","D1","E1","F1","G1"].forEach((addr) => {
+      if (wsBreakdown[addr]) wsBreakdown[addr].s = STYLE_HEADER;
+    });
+
+    // Style data rows
+    breakdownData.forEach((_, rowIdx) => {
+      const r = rowIdx + 2; // 1-indexed, +1 for header
+      const colMap = ["A","B","C","D","E","F","G"];
+      colMap.forEach((col) => {
+        const addr = `${col}${r}`;
+        if (wsBreakdown[addr]) wsBreakdown[addr].s = STYLE_CENTER;
+      });
+    });
+
     wsBreakdown["!cols"] = [
       { wch: 18 }, { wch: 14 }, { wch: 12 },
       { wch: 12 }, { wch: 14 }, { wch: 16 }, { wch: 16 },
     ];
-    XLSX.utils.book_append_sheet(wb, wsBreakdown, "تفصيل حسب الصف");
+    XLSXStyle.utils.book_append_sheet(wb, wsBreakdown, "تفصيل حسب الصف");
+  }
+
+  // ── Sheet 3: تفاصيل الطلاب (#29) ─────────────────────────────────────────
+  {
+    const detailHeaders = [
+      "الاسم الكامل", "الصف", "المجموع", "أقصى درجة",
+      "النسبة (%)", "التقدير", "الحالة",
+    ];
+
+    const detailRows = withReports.map((s) => {
+      const r = s.student_reports[0];
+      const pct = r.total_score != null && r.total_max
+        ? parseFloat(((r.total_score / r.total_max) * 100).toFixed(1))
+        : "";
+      return [
+        s.full_name,
+        GRADE_LABELS[s.grade] ?? s.grade,
+        r.total_score ?? "",
+        r.total_max ?? "",
+        pct,
+        r.result_label ?? "",
+        r.status === "published" ? "منشورة" : "مسودة",
+      ];
+    });
+
+    const wsDetail = XLSXStyle.utils.aoa_to_sheet([detailHeaders, ...detailRows]);
+
+    // Style header row
+    ["A1","B1","C1","D1","E1","F1","G1"].forEach((addr) => {
+      if (wsDetail[addr]) wsDetail[addr].s = STYLE_HEADER;
+    });
+
+    // Style data rows with colors based on result (#28)
+    detailRows.forEach((row, rowIdx) => {
+      const r = rowIdx + 2;
+      const resultLabel = String(row[5] ?? "");
+      const cls = resultLabel.includes("ناجح") ? "passed"
+        : resultLabel === "راسب" ? "failed"
+        : resultLabel ? "other"
+        : "unlabeled";
+
+      const resultStyle = cls === "passed" ? STYLE_PASSED
+        : cls === "failed" ? STYLE_FAILED
+        : cls === "other" ? STYLE_OTHER
+        : STYLE_CENTER;
+
+      // Name column — bold
+      const nameAddr = `A${r}`;
+      if (wsDetail[nameAddr]) wsDetail[nameAddr].s = STYLE_BOLD;
+
+      // Result + score columns — colored by result
+      ["C","D","E","F"].forEach((col) => {
+        const addr = `${col}${r}`;
+        if (wsDetail[addr]) wsDetail[addr].s = resultStyle;
+      });
+      // Grade and status — centered
+      ["B","G"].forEach((col) => {
+        const addr = `${col}${r}`;
+        if (wsDetail[addr]) wsDetail[addr].s = STYLE_CENTER;
+      });
+    });
+
+    wsDetail["!cols"] = [
+      { wch: 28 }, { wch: 16 }, { wch: 12 },
+      { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 12 },
+    ];
+    XLSXStyle.utils.book_append_sheet(wb, wsDetail, "تفاصيل الطلاب");
   }
 
   // Generate buffer
-  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+  const buf = XLSXStyle.write(wb, { type: "buffer", bookType: "xlsx" });
 
   const gradeLabel = gradeFilter ? `_الصف_${GRADE_LABELS[parseInt(gradeFilter)]}` : "";
   const filename = `إحصائيات${gradeLabel}_${year}.xlsx`;

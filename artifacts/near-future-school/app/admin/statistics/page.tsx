@@ -6,6 +6,7 @@ import Link from "next/link";
 import { GRADE_LABELS } from "@/lib/report-templates";
 import StatsCharts from "./StatsCharts";
 import ExportButton from "./ExportButton";
+import WatchListCard from "./WatchListCard";
 
 export const metadata = { title: "الإحصائيات — لوحة التحكم" };
 
@@ -305,6 +306,23 @@ export default async function StatisticsPage({
         </div>
       )}
 
+      {/* #30 — تنبيه عند تجاوز نسبة الرسوب 30% */}
+      {gradedStudents > 0 && failed / gradedStudents >= 0.3 && (
+        <div className="bg-red-50 border border-red-300 rounded-2xl px-5 py-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-red-700">
+              تنبيه: نسبة الرسوب تجاوزت 30%
+            </p>
+            <p className="text-sm text-red-600 mt-0.5">
+              {failed} طالب راسب من أصل {gradedStudents} — النسبة:{" "}
+              <strong>{Math.round((failed / gradedStudents) * 100)}%</strong>.
+              يُنصح بمراجعة النتائج ومتابعة الطلاب المعنيين.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Charts and breakdown (client) */}
       <StatsCharts
         distribution={distribution.map((b) => ({ label: b.label, count: b.count, color: b.color }))}
@@ -312,72 +330,13 @@ export default async function StatisticsPage({
         showBreakdown={!gradeFilter}
       />
 
-      {/* Failing & unlabeled students watch-list */}
-      {(failedStudents.length > 0 || unlabeledStudents.length > 0) && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-            <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
-              <XCircle className="w-5 h-5 text-red-500" />
-              طلاب يحتاجون متابعة
-            </h2>
-            <span className="text-xs text-gray-400">
-              {failedStudents.length + unlabeledStudents.length} طالب
-            </span>
-          </div>
-
-          <div className="divide-y divide-gray-50">
-            {/* Failed students */}
-            {failedStudents.length > 0 && (
-              <div className="px-6 py-4">
-                <p className="text-xs font-semibold text-red-600 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
-                  راسب ({failedStudents.length})
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {failedStudents.map((s) => (
-                    <Link
-                      key={s.id}
-                      href={`/admin/reports/${s.id}?year=${encodeURIComponent(year)}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-sm font-medium hover:bg-red-100 transition"
-                    >
-                      <span>{s.name}</span>
-                      {!gradeFilter && (
-                        <span className="text-red-400 text-xs font-normal">{GRADE_LABELS[s.grade]}</span>
-                      )}
-                      <ExternalLink className="w-3 h-3 opacity-60" />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Unlabeled / no-report students */}
-            {unlabeledStudents.length > 0 && (
-              <div className="px-6 py-4">
-                <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-                  غير محدد النتيجة ({unlabeledStudents.length})
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {unlabeledStudents.map((s) => (
-                    <Link
-                      key={s.id}
-                      href={`/admin/reports/${s.id}?year=${encodeURIComponent(year)}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-sm font-medium hover:bg-amber-100 transition"
-                    >
-                      <span>{s.name}</span>
-                      {!gradeFilter && (
-                        <span className="text-amber-400 text-xs font-normal">{GRADE_LABELS[s.grade]}</span>
-                      )}
-                      <ExternalLink className="w-3 h-3 opacity-60" />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* #31 — قائمة المتابعة مع بحث سريع بالاسم */}
+      <WatchListCard
+        failedStudents={failedStudents}
+        unlabeledStudents={unlabeledStudents}
+        year={year}
+        gradeFilter={gradeFilter}
+      />
 
       {/* Empty state */}
       {totalStudents === 0 && (

@@ -22,7 +22,8 @@
     "pg": "^8.22.0",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",

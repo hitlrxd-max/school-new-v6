@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import AdminSidebar from "./components/AdminSidebar";
+import AdminSessionGuard from "./components/AdminSessionGuard";
 
 export const metadata = {
   title: "لوحة التحكم — مدرسة ضياء المستقبل",
@@ -33,6 +34,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-gray-50 print:bg-white" dir="rtl">
+      <AdminSessionGuard />
       <div className="print:hidden">
         <AdminSidebar user={user} />
       </div>
