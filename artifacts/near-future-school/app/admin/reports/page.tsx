@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
-  Plus, Search, ClipboardList, CheckCircle2, Clock, Ban, Users
+  Plus, Search, ClipboardList, CheckCircle2, Clock, Ban, Users, Upload
 } from "lucide-react";
 import { GRADE_LABELS } from "@/lib/report-templates";
 import StudentRow from "./StudentRow";
@@ -69,13 +69,22 @@ export default async function ReportsPage({
           </h1>
           <p className="text-gray-500 text-sm mt-1">إدارة نتائج الطلاب وصحائف التقدير</p>
         </div>
-        <Link
-          href="/admin/reports/new"
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition"
-        >
-          <Plus className="w-4 h-4" />
-          إضافة طالب
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/reports/import"
+            className="flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition"
+          >
+            <Upload className="w-4 h-4 text-blue-500" />
+            استيراد قائمة
+          </Link>
+          <Link
+            href="/admin/reports/new"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition"
+          >
+            <Plus className="w-4 h-4" />
+            إضافة طالب
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

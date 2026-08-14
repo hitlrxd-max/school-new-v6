@@ -11,13 +11,14 @@
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.2",
+    "@workspace/db": "workspace:*",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "^0.8.3",
     "next": "^15.3.3",
     "pg": "^8.22.0",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "@workspace/db": "workspace:*"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
