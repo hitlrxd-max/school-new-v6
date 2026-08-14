@@ -9,6 +9,7 @@ import {
 import { GRADE_LABELS } from "@/lib/report-templates";
 import * as XLSX from "xlsx";
 
+
 /* ------------------------------------------------------------------ */
 /* Types                                                                */
 /* ------------------------------------------------------------------ */
@@ -132,9 +133,63 @@ export default function ImportStudentsPage() {
   const [fileName, setFileName] = useState("");
   const [defaultYear, setDefaultYear] = useState("2025-2026");
   const [loading, setLoading] = useState(false);
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
   const [importResults, setImportResults] = useState<ImportResult[] | null>(null);
   const [importSummary, setImportSummary] = useState<{ added: number; failed: number } | null>(null);
   const [parseError, setParseError] = useState("");
+
+  /* ---- Duplicate detection ---- */
+  async function applyDuplicateErrors(parsed: ParsedRow[]): Promise<ParsedRow[]> {
+    // Step 1: detect duplicates within the file itself
+    const seenInFile = new Map<string, number>(); // enrollment_number -> first occurrence index
+    const inFileDuplicates = new Set<number>(); // row indexes that are duplicates
+    for (const row of parsed) {
+      const num = row.enrollment_number.trim();
+      if (!num) continue;
+      if (seenInFile.has(num)) {
+        inFileDuplicates.add(row.index);
+        // also mark the first occurrence
+        inFileDuplicates.add(seenInFile.get(num)!);
+      } else {
+        seenInFile.set(num, row.index);
+      }
+    }
+
+    // Step 2: check against DB for numbers not already flagged as in-file duplicates
+    const numsToCheck = parsed
+      .filter((r) => r.enrollment_number.trim() && !inFileDuplicates.has(r.index))
+      .map((r) => r.enrollment_number.trim());
+
+    let dbDuplicates = new Set<string>();
+    if (numsToCheck.length > 0) {
+      setCheckingDuplicates(true);
+      try {
+        const res = await fetch(
+          `/api/admin/reports/bulk?check=${encodeURIComponent(numsToCheck.join(","))}`
+        );
+        if (res.ok) {
+          const data = await res.json() as { duplicates: string[] };
+          dbDuplicates = new Set(data.duplicates);
+        }
+      } catch {
+        // silently ignore — duplicates will be caught at save time if this fails
+      } finally {
+        setCheckingDuplicates(false);
+      }
+    }
+
+    // Step 3: inject errors into rows
+    return parsed.map((row) => {
+      const num = row.enrollment_number.trim();
+      const newErrors = [...row.errors];
+      if (num && inFileDuplicates.has(row.index)) {
+        newErrors.push("رقم القيد مكرر داخل الملف");
+      } else if (num && dbDuplicates.has(num)) {
+        newErrors.push("رقم القيد موجود مسبقاً في قاعدة البيانات");
+      }
+      return { ...row, errors: newErrors };
+    });
+  }
 
   /* ---- File parsing ---- */
   const processFile = useCallback((file: File) => {
@@ -146,20 +201,21 @@ export default function ImportStudentsPage() {
     setFileName(file.name);
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = new Uint8Array(e.target!.result as ArrayBuffer);
         const wb = XLSX.read(data, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const { rows: parsed, missingColumns: missing } = parseSheet(ws, defaultYear);
-        setRows(parsed);
         setMissingColumns(missing);
+        const withDuplicates = await applyDuplicateErrors(parsed);
+        setRows(withDuplicates);
       } catch {
         setParseError("تعذّر قراءة الملف — تأكد أنه ملف Excel أو CSV صحيح");
       }
     };
     reader.readAsArrayBuffer(file);
-  }, [defaultYear]);
+  }, [defaultYear]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -225,7 +281,7 @@ export default function ImportStudentsPage() {
 
   const validCount = rows.filter((r) => r.errors.length === 0).length;
   const errorCount = rows.filter((r) => r.errors.length > 0).length;
-  const canImport = validCount > 0 && missingColumns.length === 0 && !loading;
+  const canImport = validCount > 0 && missingColumns.length === 0 && !loading && !checkingDuplicates;
 
   return (
     <div dir="rtl" className="max-w-4xl">
@@ -391,8 +447,8 @@ export default function ImportStudentsPage() {
                     disabled={!canImport}
                     className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                    {loading ? "جاري الاستيراد…" : `استيراد ${validCount} طالب`}
+                    {(loading || checkingDuplicates) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    {loading ? "جاري الاستيراد…" : checkingDuplicates ? "جاري التحقق من التكرار…" : `استيراد ${validCount} طالب`}
                   </button>
                 </div>
               </div>

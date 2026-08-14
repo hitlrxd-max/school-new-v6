@@ -2,6 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getTemplateForGrade } from "@/lib/report-templates";
 
+// GET /api/admin/reports/bulk?check=n1,n2,n3 — return which enrollment numbers already exist
+export async function GET(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const param = req.nextUrl.searchParams.get("check") ?? "";
+  const numbers = param.split(",").map((n) => n.trim()).filter(Boolean);
+  if (numbers.length === 0) return NextResponse.json({ duplicates: [] });
+
+  const admin = await createAdminClient();
+  const { data, error } = await admin
+    .from("students")
+    .select("enrollment_number")
+    .in("enrollment_number", numbers);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const duplicates = (data ?? [])
+    .map((r) => r.enrollment_number)
+    .filter(Boolean) as string[];
+
+  return NextResponse.json({ duplicates });
+}
+
 interface StudentInput {
   full_name: string;
   enrollment_number?: string;
