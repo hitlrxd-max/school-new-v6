@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { BarChart2, Users, CheckCircle2, XCircle, AlertCircle, TrendingUp } from "lucide-react";
 import { GRADE_LABELS } from "@/lib/report-templates";
 import StatsCharts from "./StatsCharts";
+import ExportButton from "./ExportButton";
 
 export const metadata = { title: "الإحصائيات — لوحة التحكم" };
 
@@ -31,16 +32,19 @@ export default async function StatisticsPage({
 
   const admin = await createAdminClient();
 
-  // Fetch students with their reports
+  // Fetch students with their reports — filter both the students table and
+  // the embedded student_reports relation by academic_year so we never pick
+  // up a prior year's report for a student who spans multiple years.
   let q = admin
     .from("students")
     .select(`
       id, grade,
       student_reports!student_reports_student_id_fkey (
-        status, total_score, total_max, result_label
+        status, total_score, total_max, result_label, academic_year
       )
     `)
-    .eq("academic_year", year);
+    .eq("academic_year", year)
+    .eq("student_reports.academic_year", year);
 
   if (gradeFilter) q = q.eq("grade", parseInt(gradeFilter));
 
@@ -50,11 +54,11 @@ export default async function StatisticsPage({
   const rows = (students ?? []) as Array<{
     id: string;
     grade: number;
-    student_reports: Array<{ status: string; total_score: number | null; total_max: number | null; result_label: string | null }>;
+    student_reports: Array<{ status: string; total_score: number | null; total_max: number | null; result_label: string | null; academic_year: string }>;
   }>;
 
-  // Only students that have a report (with grades entered)
-  const withReports = rows.filter((s) => s.student_reports?.[0]);
+  // Only students that have a report for this academic year
+  const withReports = rows.filter((s) => s.student_reports?.length > 0);
   const allStudents = rows;
 
   function classify(report: { result_label: string | null; total_score: number | null }) {
@@ -135,6 +139,10 @@ export default async function StatisticsPage({
           <p className="text-gray-500 text-sm mt-1">نظرة شاملة على أداء الطلاب وتوزيع النتائج</p>
         </div>
 
+        {/* Actions */}
+        <div className="flex flex-wrap gap-3 items-center">
+        <ExportButton grade={gradeFilter} year={year} />
+
         {/* Filters */}
         <form className="flex flex-wrap gap-3 items-center">
           <select
@@ -168,6 +176,7 @@ export default async function StatisticsPage({
             إعادة ضبط
           </a>
         </form>
+        </div>
       </div>
 
       {/* Context label */}
