@@ -6,6 +6,7 @@ import { Download } from "lucide-react";
 interface DownloadPDFButtonProps {
   targetId?: string;
   studentName?: string;
+  enrollmentNumber?: string;
   label?: string;
   className?: string;
 }
@@ -13,6 +14,7 @@ interface DownloadPDFButtonProps {
 export default function DownloadPDFButton({
   targetId = "report-card",
   studentName = "صحيفة_النتيجة",
+  enrollmentNumber,
   label = "تنزيل PDF",
   className,
 }: DownloadPDFButtonProps) {
@@ -88,7 +90,10 @@ export default function DownloadPDFButton({
         pageNum++;
       }
 
-      const filename = `${studentName.replace(/\s+/g, "_")}_صحيفة_النتيجة.pdf`;
+      const namePart = studentName.replace(/\s+/g, "_");
+      const filename = enrollmentNumber
+        ? `${namePart}_${enrollmentNumber}_صحيفة_النتيجة.pdf`
+        : `${namePart}_صحيفة_النتيجة.pdf`;
       pdf.save(filename);
     } catch (err) {
       console.error("PDF generation failed:", err);

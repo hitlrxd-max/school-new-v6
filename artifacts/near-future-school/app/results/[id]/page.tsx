@@ -54,7 +54,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
             مدرسة ضياء المستقبل
           </Link>
           <div className="flex items-center gap-3">
-            <DownloadPDFButton studentName={student.full_name} />
+            <DownloadPDFButton studentName={student.full_name} enrollmentNumber={student.enrollment_number ?? undefined} />
             <PrintButton />
             <Link href="/results" className="flex items-center gap-1 text-sm text-blue-600 hover:underline">
               <ArrowRight className="w-4 h-4" />بحث جديد
