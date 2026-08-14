@@ -1,7 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { BarChart2, Users, CheckCircle2, XCircle, AlertCircle, TrendingUp } from "lucide-react";
+import { BarChart2, Users, CheckCircle2, XCircle, AlertCircle, TrendingUp, ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { GRADE_LABELS } from "@/lib/report-templates";
 import StatsCharts from "./StatsCharts";
 import ExportButton from "./ExportButton";
@@ -38,7 +39,7 @@ export default async function StatisticsPage({
   let q = admin
     .from("students")
     .select(`
-      id, grade,
+      id, full_name, grade,
       student_reports!student_reports_student_id_fkey (
         status, total_score, total_max, result_label, academic_year
       )
@@ -53,6 +54,7 @@ export default async function StatisticsPage({
   // Compute aggregate stats
   const rows = (students ?? []) as Array<{
     id: string;
+    full_name: string;
     grade: number;
     student_reports: Array<{ status: string; total_score: number | null; total_max: number | null; result_label: string | null; academic_year: string }>;
   }>;
@@ -126,6 +128,18 @@ export default async function StatisticsPage({
     : [];
 
   const passRate = gradedStudents > 0 ? Math.round((passed / gradedStudents) * 100) : 0;
+
+  // Failed and unlabeled students for the watch-list card
+  const failedStudents = withReports
+    .filter((s) => classify(s.student_reports[0]) === "failed")
+    .map((s) => ({ id: s.id, name: s.full_name, grade: s.grade }));
+
+  const unlabeledStudents = allStudents
+    .filter((s) => {
+      if (s.student_reports?.length === 0) return true; // no report yet
+      return classify(s.student_reports[0]) === "unlabeled";
+    })
+    .map((s) => ({ id: s.id, name: s.full_name, grade: s.grade }));
 
   return (
     <div dir="rtl" className="space-y-6">
@@ -297,6 +311,73 @@ export default async function StatisticsPage({
         gradeBreakdown={gradeBreakdown}
         showBreakdown={!gradeFilter}
       />
+
+      {/* Failing & unlabeled students watch-list */}
+      {(failedStudents.length > 0 || unlabeledStudents.length > 0) && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
+            <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-red-500" />
+              طلاب يحتاجون متابعة
+            </h2>
+            <span className="text-xs text-gray-400">
+              {failedStudents.length + unlabeledStudents.length} طالب
+            </span>
+          </div>
+
+          <div className="divide-y divide-gray-50">
+            {/* Failed students */}
+            {failedStudents.length > 0 && (
+              <div className="px-6 py-4">
+                <p className="text-xs font-semibold text-red-600 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+                  راسب ({failedStudents.length})
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {failedStudents.map((s) => (
+                    <Link
+                      key={s.id}
+                      href={`/admin/reports/${s.id}?year=${encodeURIComponent(year)}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-sm font-medium hover:bg-red-100 transition"
+                    >
+                      <span>{s.name}</span>
+                      {!gradeFilter && (
+                        <span className="text-red-400 text-xs font-normal">{GRADE_LABELS[s.grade]}</span>
+                      )}
+                      <ExternalLink className="w-3 h-3 opacity-60" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Unlabeled / no-report students */}
+            {unlabeledStudents.length > 0 && (
+              <div className="px-6 py-4">
+                <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                  غير محدد النتيجة ({unlabeledStudents.length})
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {unlabeledStudents.map((s) => (
+                    <Link
+                      key={s.id}
+                      href={`/admin/reports/${s.id}?year=${encodeURIComponent(year)}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-sm font-medium hover:bg-amber-100 transition"
+                    >
+                      <span>{s.name}</span>
+                      {!gradeFilter && (
+                        <span className="text-amber-400 text-xs font-normal">{GRADE_LABELS[s.grade]}</span>
+                      )}
+                      <ExternalLink className="w-3 h-3 opacity-60" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Empty state */}
       {totalStudents === 0 && (

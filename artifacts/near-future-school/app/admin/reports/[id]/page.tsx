@@ -15,22 +15,36 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 function n(v: any) { const x = parseFloat(v ?? ""); return isNaN(x) ? 0 : x; }
 
-export default async function StudentReportPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function StudentReportPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ year?: string }>;
+}) {
   const { id } = await params;
+  const { year } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
   const admin = await createAdminClient();
-  const { data: student, error } = await admin
+  let reportsQuery = admin
     .from("students")
     .select(`*, student_reports!student_reports_student_id_fkey(*)`)
-    .eq("id", id)
-    .single();
+    .eq("id", id);
+  if (year) {
+    reportsQuery = reportsQuery.eq("student_reports.academic_year", year);
+  }
+  const { data: student, error } = await reportsQuery.single();
 
   if (error || !student) notFound();
 
-  const report = (student.student_reports as any[])?.[0];
+  // Pick the report matching the requested year; fall back to the first available
+  const allReports = (student.student_reports as any[]) ?? [];
+  const report = year
+    ? (allReports.find((r: any) => r.academic_year === year) ?? allReports[0])
+    : allReports[0];
   const template = getTemplateById(report?.template_id ?? "T1");
   const scores = report?.scores ?? {};
   const activity = report?.activity_scores ?? {};
