@@ -70,20 +70,10 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
         <div id="report-card" className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0">
           {/* Header */}
           <div className="border-b border-gray-100 px-6 py-6 text-center bg-gradient-to-l from-blue-50 to-white print:bg-white print:border-b print:border-gray-400 print:py-3">
-            {/* Print-only official top bar */}
-            <div className="hidden print:block mb-2">
-              <div className="flex items-center justify-between text-[9pt] text-gray-600 mb-1">
-                <span>الجمهورية اليمنية</span>
-                <span>وزارة التربية والتعليم</span>
-              </div>
-              <div className="border-t border-b border-gray-400 py-1.5 my-1">
-                <p className="text-[7pt] text-gray-500">إدارة تربية وتعليم محافظة ——</p>
-              </div>
-            </div>
             {/* Logo */}
             <div className="flex justify-center mb-3 print:mb-2">
               <img
-                src="/school-logo.jpg"
+                src="/school-logo-transparent.png"
                 alt="شعار مدرسة ضياء المستقبل"
                 className="w-[90px] h-[90px] object-contain print:w-[70px] print:h-[70px]"
               />
