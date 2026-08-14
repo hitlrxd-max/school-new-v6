@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { GRADE_LABELS } from "@/lib/report-templates";
 import StudentRow from "./StudentRow";
+import DownloadClassZipButton from "@/app/components/DownloadClassZipButton";
 
 export const metadata = { title: "الصحائف والنتائج — لوحة التحكم" };
 
@@ -48,6 +49,19 @@ export default async function ReportsPage({
 
   const { data: students = [] } = await q;
 
+  // Separate query for ZIP button: all students in the selected grade, independent of
+  // search/status filters. Only runs when a grade is explicitly chosen.
+  let gradeStudentsForZip: { id: string; full_name: string; enrollment_number: string | null }[] = [];
+  if (grade) {
+    const { data: gs } = await admin
+      .from("students")
+      .select("id, full_name, enrollment_number")
+      .eq("academic_year", year)
+      .eq("grade", parseInt(grade))
+      .order("full_name");
+    gradeStudentsForZip = gs ?? [];
+  }
+
   // Filter by status client-side
   let filtered = students ?? [];
   if (status === "published") filtered = filtered.filter((s: any) => (s.student_reports as any[])?.[0]?.status === "published");
@@ -70,6 +84,16 @@ export default async function ReportsPage({
           <p className="text-gray-500 text-sm mt-1">إدارة نتائج الطلاب وصحائف التقدير</p>
         </div>
         <div className="flex items-center gap-2">
+          <DownloadClassZipButton
+            students={gradeStudentsForZip.map((s) => ({
+              id: s.id,
+              full_name: s.full_name,
+              enrollment_number: s.enrollment_number ?? undefined,
+            }))}
+            gradeName={grade ? GRADE_LABELS[parseInt(grade)] : undefined}
+            year={year}
+            hasGradeFilter={!!grade}
+          />
           <a
             href={`/api/admin/reports/export?year=${year}${grade ? `&grade=${grade}` : ""}${status ? `&status=${status}` : ""}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
             className="flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition"
