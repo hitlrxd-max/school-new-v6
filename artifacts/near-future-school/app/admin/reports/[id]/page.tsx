@@ -2,10 +2,11 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowRight, Pencil, ClipboardEdit, Printer, CheckCircle2, Clock, Ban
+  ArrowRight, Pencil, ClipboardEdit, CheckCircle2, Clock, Ban
 } from "lucide-react";
 import { getTemplateById, GRADE_LABELS, calcTotalMax, calcTotalMin, calcPeriodMax, calcExamMax } from "@/lib/report-templates";
 import ReportPublishButtons from "./ReportPublishButtons";
+import PrintButton from "@/app/components/PrintButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   return { title: "صحيفة الطالب — لوحة التحكم" };
@@ -49,7 +50,7 @@ export default async function StudentReportPage({ params }: { params: Promise<{ 
   return (
     <div dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3 print:hidden">
         <div className="flex items-center gap-3">
           <Link href="/admin/reports" className="text-gray-400 hover:text-gray-600 transition">
             <ArrowRight className="w-5 h-5" />
@@ -67,29 +68,40 @@ export default async function StudentReportPage({ params }: { params: Promise<{ 
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Link href={`/admin/reports/${id}/edit`}
-            className="flex items-center gap-1.5 border border-gray-200 text-gray-600 px-3 py-2 rounded-xl text-sm hover:bg-gray-50 transition">
+            className="flex items-center gap-1.5 border border-gray-200 text-gray-600 px-3 py-2 rounded-xl text-sm hover:bg-gray-50 transition print:hidden">
             <Pencil className="w-4 h-4" />تعديل البيانات
           </Link>
           <Link href={`/admin/reports/${id}/grades`}
-            className="flex items-center gap-1.5 border border-blue-200 text-blue-600 px-3 py-2 rounded-xl text-sm hover:bg-blue-50 transition">
+            className="flex items-center gap-1.5 border border-blue-200 text-blue-600 px-3 py-2 rounded-xl text-sm hover:bg-blue-50 transition print:hidden">
             <ClipboardEdit className="w-4 h-4" />إدخال الدرجات
           </Link>
-          <button onClick={() => {}} className="flex items-center gap-1.5 border border-gray-200 text-gray-600 px-3 py-2 rounded-xl text-sm hover:bg-gray-50 transition print:hidden">
-            <Printer className="w-4 h-4" />طباعة
-          </button>
+          <PrintButton
+            label="طباعة الصحيفة"
+            className="flex items-center gap-1.5 border border-gray-200 text-gray-600 px-3 py-2 rounded-xl text-sm hover:bg-gray-50 transition print:hidden"
+          />
         </div>
       </div>
 
       {/* Publish actions */}
-      {report && <ReportPublishButtons studentId={id} report={report} />}
+      {report && <div className="print:hidden"><ReportPublishButtons studentId={id} report={report} /></div>}
 
       {/* Report Card */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mt-4 print:shadow-none print:border-0">
         {/* Report Header */}
-        <div className="border-b border-gray-100 px-6 py-5 text-center">
-          <h2 className="text-xl font-bold text-gray-900">مدرسة ضياء المستقبل</h2>
-          <h3 className="text-base font-semibold text-blue-600 mt-1">بطاقة تقدير الدرجات</h3>
-          <p className="text-sm text-gray-500 mt-0.5">{template.name} — السنة الدراسية {student.academic_year}</p>
+        <div className="border-b border-gray-100 px-6 py-5 text-center print:py-3 print:border-gray-400">
+          {/* Print-only official header */}
+          <div className="hidden print:block mb-2">
+            <div className="flex items-center justify-between text-[9pt] text-gray-600 mb-1">
+              <span>الجمهورية اليمنية</span>
+              <span>وزارة التربية والتعليم</span>
+            </div>
+            <div className="border-t border-b border-gray-400 py-1.5 my-1">
+              <p className="text-[7pt] text-gray-500">إدارة تربية وتعليم محافظة ——</p>
+            </div>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 print:text-[16pt]">مدرسة ضياء المستقبل</h2>
+          <h3 className="text-base font-semibold text-blue-600 mt-1 print:text-[12pt] print:text-gray-800">بطاقة تقدير الدرجات</h3>
+          <p className="text-sm text-gray-500 mt-0.5 print:text-[9pt]">{template.name} — السنة الدراسية {student.academic_year}</p>
         </div>
 
         {/* Student Info */}

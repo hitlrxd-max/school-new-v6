@@ -32,10 +32,12 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      <AdminSidebar user={user} />
-      <div className="lg:mr-72 min-h-screen">
-        <div className="p-4 lg:p-8 pt-20 lg:pt-8">{children}</div>
+    <div className="min-h-screen bg-gray-50 print:bg-white" dir="rtl">
+      <div className="print:hidden">
+        <AdminSidebar user={user} />
+      </div>
+      <div className="lg:mr-72 print:mr-0 min-h-screen">
+        <div className="p-4 lg:p-8 pt-20 lg:pt-8 print:p-0 print:pt-0">{children}</div>
       </div>
     </div>
   );

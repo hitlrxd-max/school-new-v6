@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { GraduationCap, ArrowRight } from "lucide-react";
 import { getTemplateById, GRADE_LABELS, calcPeriodMax, calcExamMax, calcTotalMax, calcTotalMin } from "@/lib/report-templates";
+import PrintButton from "@/app/components/PrintButton";
 
 export const metadata = { title: "صحيفة النتيجة — مدرسة ضياء المستقبل" };
 
@@ -52,10 +53,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
             مدرسة ضياء المستقبل
           </Link>
           <div className="flex items-center gap-3">
-            <button onClick={() => window.print()}
-              className="text-sm border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition">
-              طباعة الصحيفة
-            </button>
+            <PrintButton />
             <Link href="/results" className="flex items-center gap-1 text-sm text-blue-600 hover:underline">
               <ArrowRight className="w-4 h-4" />بحث جديد
             </Link>
@@ -67,10 +65,20 @@ export default async function PublicReportPage({ params }: { params: Promise<{ i
         {/* Report Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-0">
           {/* Header */}
-          <div className="border-b border-gray-100 px-6 py-6 text-center bg-gradient-to-l from-blue-50 to-white">
-            <h1 className="text-2xl font-bold text-gray-900">مدرسة ضياء المستقبل</h1>
-            <h2 className="text-lg font-semibold text-blue-600 mt-1">بطاقة تقدير الدرجات</h2>
-            <p className="text-sm text-gray-500 mt-0.5">{template.name}</p>
+          <div className="border-b border-gray-100 px-6 py-6 text-center bg-gradient-to-l from-blue-50 to-white print:bg-white print:border-b print:border-gray-400 print:py-3">
+            {/* Print-only official header */}
+            <div className="hidden print:block mb-2">
+              <div className="flex items-center justify-between text-[9pt] text-gray-600 mb-1">
+                <span>الجمهورية اليمنية</span>
+                <span>وزارة التربية والتعليم</span>
+              </div>
+              <div className="border-t border-b border-gray-400 py-1.5 my-1">
+                <p className="text-[7pt] text-gray-500">إدارة تربية وتعليم محافظة ——</p>
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 print:text-[16pt]">مدرسة ضياء المستقبل</h1>
+            <h2 className="text-lg font-semibold text-blue-600 mt-1 print:text-[12pt] print:text-gray-800">بطاقة تقدير الدرجات</h2>
+            <p className="text-sm text-gray-500 mt-0.5 print:text-[9pt]">{template.name}</p>
           </div>
 
           {/* Student Info */}
