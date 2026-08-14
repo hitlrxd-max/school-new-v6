@@ -1,2 +1,3 @@
 - [Supabase setup](supabase-setup.md) — env vars as Replit Secrets need URL normalization; project ref ≠ full URL
 - [Next.js env var pattern](nextjs-env-pattern.md) — NEXT_PUBLIC_* vars need next.config.ts env block + normalizeUrl helper for bare project refs
+- [Report cards system](report-cards-system.md) — 6 templates defined in lib/report-templates.ts; JSONB scores in student_reports; run supabase-reports-setup.sql first

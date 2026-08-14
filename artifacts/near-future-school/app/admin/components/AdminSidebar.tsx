@@ -14,6 +14,7 @@ import {
   X,
   ExternalLink,
   PlusCircle,
+  ClipboardList,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
@@ -26,6 +27,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/admin", label: "الرئيسية", icon: <LayoutDashboard className="w-5 h-5" /> },
   { href: "/admin/news", label: "إدارة الأخبار", icon: <Newspaper className="w-5 h-5" /> },
+  { href: "/admin/reports", label: "الصحائف والنتائج", icon: <ClipboardList className="w-5 h-5" /> },
   { href: "/admin/notes", label: "الملاحظات المهمة", icon: <StickyNote className="w-5 h-5" /> },
 ];
 

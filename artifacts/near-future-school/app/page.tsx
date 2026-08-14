@@ -110,6 +110,7 @@ export default function Home() {
             <a href="#vision" className="hover:text-[#1FA0FF] transition-colors">الرؤية والرسالة</a>
             <a href="#features" className="hover:text-[#1FA0FF] transition-colors">ما يميزنا</a>
             <a href="#news" className="hover:text-[#1FA0FF] transition-colors">الأخبار</a>
+            <Link href="/results" className="hover:text-[#1FA0FF] transition-colors">النتائج</Link>
             <a href="#branches" className="hover:text-[#1FA0FF] transition-colors">فروعنا</a>
           </div>
           <Button asChild className="text-white rounded-full px-6 shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5" style={{ background: "linear-gradient(135deg, #1FA0FF, #12DAFB)" }}>
